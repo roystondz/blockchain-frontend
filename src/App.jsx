@@ -1,62 +1,72 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Navbar from './components/Navbar';
-import Spinner from './components/Spinner';
+
+import ProtectedRoute from './routes/ProtectedRoute';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import HospitalDashboard from './pages/HospitalDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import PatientDashboard from './pages/PatientDashboard';
+import LedgerStats from './pages/LedgerStats';
 
-const AppContent = () => {
-  const { user, logout, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Login />;
-  }
-
-  const renderDashboard = () => {
-    switch (user.role) {
-      case 'admin':
-        return <AdminDashboard />;
-      case 'doctor':
-        return <DoctorDashboard />;
-      case 'patient':
-        return <PatientDashboard />;
-      default:
-        return (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Unknown user role</p>
-          </div>
-        );
-    }
-  };
-
+const App = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar user={user} onLogout={logout} />
-      <div className="py-8 px-4 sm:px-6 lg:px-8">
-        {renderDashboard()}
-      </div>
-    </div>
+    <Router>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/hospital"
+          element={
+            <ProtectedRoute allowedRoles={['hospital']}>
+              <HospitalDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute allowedRoles={['doctor']}>
+              <DoctorDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/patient"
+          element={
+            <ProtectedRoute allowedRoles={['patient']}>
+              <PatientDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route
+          path="/ledger"
+          element={
+            <ProtectedRoute>
+              <LedgerStats />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 };
 
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
-      <Toaster position="top-right" />
-    </AuthProvider>
-  );
-}
-
-export default App;
+export default App

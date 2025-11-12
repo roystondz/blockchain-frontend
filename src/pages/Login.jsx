@@ -1,66 +1,76 @@
-import React, { useState } from 'react';
-import { toast } from 'react-hot-toast';
-import { useAuth } from '../context/AuthContext';
-import { login as loginAPI } from '../api/auth';
-import Card from '../components/Card';
-import Input from '../components/Input';
-import Button from '../components/Button';
-
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+import { Home, Hospital, Users, Shield } from "lucide-react";
+import InputField from "../components/InputField";
+import Button from "../components/Button";
 const Login = () => {
   const [userId, setUserId] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-
-  const handleSubmit = async (e) => {
+  const navigate = useNavigate();
+  
+  const handleLogin = async (e) => {
     e.preventDefault();
     if (!userId.trim()) {
-      toast.error('Please enter a user ID');
+      toast.error('Please enter User ID');
       return;
     }
-
+    
     setLoading(true);
     try {
-      await loginAPI(userId);
-      const role = login(userId);
-      toast.success(`Welcome! Logged in as ${role}`);
+      const res = await api.post('/login', { userId });
+      if (res.data.success) {
+        localStorage.setItem('userId', userId);
+        toast.success('Login successful!');
+        
+        const role = getUserRole(userId);
+        navigate(`/${role}`);
+      } else {
+        toast.error(res.data.message || 'Login failed');
+      }
     } catch (error) {
-      toast.error(error.message || 'Login failed');
+      toast.error(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <svg className="h-16 w-16 text-blue-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <h1 className="text-3xl font-bold text-gray-800">MediChain</h1>
-          <p className="text-gray-600 mt-2">Blockchain-based Healthcare Management</p>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+            <Shield className="w-8 h-8 text-blue-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800">EHR System</h1>
+          <p className="text-gray-600 mt-2">Blockchain-powered Healthcare</p>
         </div>
-        <form onSubmit={handleSubmit}>
-          <Input
+        
+        <form onSubmit={handleLogin}>
+          <InputField
             label="User ID"
             value={userId}
             onChange={(e) => setUserId(e.target.value)}
-            placeholder="Enter your user ID (e.g., PAT001, DOC001, HOSP001)"
-            disabled={loading}
+            placeholder="Enter your User ID (ADMIN/HOSP/DOC/PAT...)"
+            required
           />
-          <Button type="submit" className="w-full" disabled={loading}>
+          
+          <Button type="submit" disabled={loading} fullWidth>
             {loading ? 'Logging in...' : 'Login'}
           </Button>
         </form>
-        <div className="mt-6 text-sm text-gray-600 bg-gray-50 p-4 rounded">
-          <p className="font-medium mb-2">Sample User IDs:</p>
-          <ul className="space-y-1">
-            <li>• <span className="font-mono">PAT001</span> - Patient</li>
-            <li>• <span className="font-mono">DOC001</span> - Doctor</li>
-            <li>• <span className="font-mono">HOSP001</span> - Hospital Admin</li>
+        
+        <div className="mt-6 text-sm text-gray-600">
+          <p className="font-medium mb-2">Sample IDs:</p>
+          <ul className="space-y-1 text-xs">
+            <li>• ADMIN001 - Admin Portal</li>
+            <li>• HOSP001 - Hospital Portal</li>
+            <li>• DOC001 - Doctor Portal</li>
+            <li>• PAT001 - Patient Portal</li>
           </ul>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
