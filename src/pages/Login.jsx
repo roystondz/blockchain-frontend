@@ -5,16 +5,7 @@ import { Shield } from "lucide-react";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import api from "../api/api";
-
-// ✅ Helper to get user role from prefix
-const getUserRole = (userId) => {
-  if (!userId) return null;
-  if (userId.startsWith("ADMIN")) return "admin";
-  if (userId.startsWith("HOSP")) return "hospital";
-  if (userId.startsWith("DOC")) return "doctor";
-  if (userId.startsWith("PAT")) return "patient";
-  return null;
-};
+import getUserRole from "../utils/getUserRole";
 
 const Login = () => {
   const [userId, setUserId] = useState("");
@@ -29,7 +20,7 @@ const Login = () => {
       return;
     }
 
-    // ✅ Validate format like HOSP-01, DOC-02, etc.
+    // Validate format like ADMIN-01, HOSP-01, DOC-01, PAT-01
     const idPattern = /^(ADMIN|HOSP|DOC|PAT)-\d{2}$/;
     if (!idPattern.test(userId)) {
       toast.error("Invalid ID format. Use format like HOSP-01, DOC-02, etc.");
@@ -38,11 +29,22 @@ const Login = () => {
 
     setLoading(true);
     try {
+      const mockMode = true; // 🔧 set false when backend is ready
+
+      if (mockMode) {
+        localStorage.setItem("userId", userId);
+        const role = getUserRole(userId);
+        toast.success(`Mock login successful as ${role}!`);
+        navigate(`/${role}`);
+        return;
+      }
+
+      // Real API mode (for when backend is running)
       const res = await api.post("/login", { userId });
       if (res.data.success) {
         localStorage.setItem("userId", userId);
-        toast.success("Login successful!");
         const role = getUserRole(userId);
+        toast.success("Login successful!");
         navigate(`/${role}`);
       } else {
         toast.error(res.data.message || "Login failed");
@@ -73,7 +75,6 @@ const Login = () => {
             placeholder="Enter your ID (e.g., HOSP-01, DOC-02)"
             required
           />
-
           <Button type="submit" disabled={loading} fullWidth>
             {loading ? "Logging in..." : "Login"}
           </Button>

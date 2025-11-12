@@ -1,7 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import getUserRole from "../utils/getUserRole"; // ✅ add this import
-
+import getUserRole from "../utils/getUserRole";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const userId = localStorage.getItem("userId");
