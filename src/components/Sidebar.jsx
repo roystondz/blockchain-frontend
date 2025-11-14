@@ -11,7 +11,7 @@ const Sidebar = ({ role, isOpen, onClose }) => {
   const menuItems = {
     admin: [
       { icon: Home, label: 'Dashboard', path: '/admin' },
-       {icon: Home,label:"Show Hospitals",path:'/showhos'},
+       {icon: Hospital,label:"Show Hospitals",path:'/showhos'},
       { icon: Database, label: 'Ledger Stats', path: '/ledger' }
     ],
     hospital: [
