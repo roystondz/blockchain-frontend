@@ -9,7 +9,7 @@ import HospitalDashboard from './pages/HospitalDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import LedgerStats from './pages/LedgerStats';
-
+import Dochos from './pages/DoctorHospitals'
 const App = () => {
   return (
     <Router>
@@ -23,6 +23,14 @@ const App = () => {
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminDashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/showhos"
+          element={
+          
+              <Dochos />
+           
           }
         />
         

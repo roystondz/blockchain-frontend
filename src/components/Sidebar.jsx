@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Hospital, Users, FileText, Settings, LogOut, Upload, UserPlus, Activity, Shield, Database } from "lucide-react";
+import { Home, Hospital, Users, FileText, Settings, LogOut, Upload, UserPlus, Activity, Shield, Database, ShowerHead } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 
@@ -11,25 +11,21 @@ const Sidebar = ({ role, isOpen, onClose }) => {
   const menuItems = {
     admin: [
       { icon: Home, label: 'Dashboard', path: '/admin' },
-      { icon: Hospital, label: 'Hospitals', path: '/admin/hospitals' },
+       {icon: Home,label:"Show Hospitals",path:'/showhos'},
       { icon: Database, label: 'Ledger Stats', path: '/ledger' }
     ],
     hospital: [
       { icon: Home, label: 'Dashboard', path: '/hospital' },
-      { icon: UserPlus, label: 'Register Doctor', path: '/hospital/register-doctor' },
-      { icon: UserPlus, label: 'Register Patient', path: '/hospital/register-patient' },
+   
       { icon: Database, label: 'Ledger Stats', path: '/ledger' }
     ],
     doctor: [
       { icon: Home, label: 'Dashboard', path: '/doctor' },
-      { icon: Users, label: 'My Patients', path: '/doctor/patients' },
       { icon: Database, label: 'Ledger Stats', path: '/ledger' }
     ],
     patient: [
       { icon: Home, label: 'Dashboard', path: '/patient' },
-      { icon: FileText, label: 'My Records', path: '/patient/records' },
-      { icon: Shield, label: 'Access Control', path: '/patient/access' },
-      { icon: Settings, label: 'Profile', path: '/patient/profile' }
+    
     ]
   };
   

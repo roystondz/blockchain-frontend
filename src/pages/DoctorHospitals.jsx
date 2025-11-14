@@ -1,3 +1,9 @@
+
+import { useState,useEffect } from "react";
+import Card from "../components/Card";
+import DashboardLayout from "../layouts/DashboardLayout";
+import { Users, FileText, Eye, Upload,Hospital } from "lucide-react";
+import Table from "../components/Table";
 const DoctorHospitals = () => {
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(false);
