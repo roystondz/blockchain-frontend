@@ -17,11 +17,15 @@ const Table = ({ headers, data, renderRow }) => (
               No data available
             </td>
           </tr>
+        
         ) : (
           data.map((item, idx) => renderRow(item, idx))
         )}
       </tbody>
     </table>
+      <div>
+          
+          </div>
   </div>
 );
 export default Table;

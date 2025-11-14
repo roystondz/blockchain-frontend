@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { Hospital, Users } from "lucide-react";
-
-import DashboardLayout from "../layouts/DashboardLayout";
-import Card from "../components/Card";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
+import DashboardLayout from "../layouts/DashboardLayout";
+import Card from "../components/Card";
+
 
 
 const AdminDashboard = () => {
@@ -100,6 +100,7 @@ const AdminDashboard = () => {
           </div>
         </form>
       </Card>
+
     </DashboardLayout>
   );
 };
