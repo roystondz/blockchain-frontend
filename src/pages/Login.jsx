@@ -21,7 +21,7 @@ const Login = () => {
     }
 
     // Validate format like ADMIN-01, HOSP-01, DOC-01, PAT-01
-    const idPattern = /^(ADMIN|HOSP|DOC|PAT)-\d{2}$/;
+    const idPattern = /^(hospitalAdmin|HOSP|DOC|PAT)-\d{2}$/;
     if (!idPattern.test(userId)) {
       toast.error("Invalid ID format. Use format like HOSP-01, DOC-02, etc.");
       return;
@@ -83,7 +83,7 @@ const Login = () => {
         <div className="mt-6 text-sm text-gray-600">
           <p className="font-medium mb-2">Sample IDs:</p>
           <ul className="space-y-1 text-xs">
-            <li>• ADMIN-01 - Admin Portal</li>
+            <li>• hospitalAdmin-01 - Admin Portal</li>
             <li>• HOSP-01 - Hospital Portal</li>
             <li>• DOC-01 - Doctor Portal</li>
             <li>• PAT-01 - Patient Portal</li>

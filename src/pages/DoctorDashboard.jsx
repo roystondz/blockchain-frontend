@@ -32,30 +32,12 @@ const DoctorDashboard = () => {
     setLoading(true);
     try {
       const res = await api.post('/getPatientsForDoctor', { doctorId });
-         let list = res.data.success ? res.data.data || [] : [];
-
-    // 🔥 Add dummy patient here
-    list.push({
-      patientId: "TEST001",
-      name: "Dummy Patient",
-      dob: "1999-12-12",
-      city: "Bangalore"
-    });
-
-    setPatients(list);
-      // if (res.data.success) {
-      //   // setPatients(res.data.data || []);
-      //     setPatients(list);
-      // }
+   
+      if (res.data.success) {
+        setPatients(res.data.data || []);
+      
+       }
     } catch (error) {
-        setPatients([
-      {
-        patientId: "TEST001",
-        name: "Dummy Patient",
-        dob: "1999-12-12",
-        city: "Bangalore"
-      }
-    ]);
       toast.error('Failed to fetch patients');
 
     } finally {

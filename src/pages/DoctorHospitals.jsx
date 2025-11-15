@@ -18,22 +18,9 @@ const DoctorHospitals = () => {
       const res = await api.get('/getSystemStats');
       if (res.data.success && res.data.data.hospitals) {
         setHospitals(res.data.data.hospitals || []);
-      } else {
-        // Mock data if endpoint doesn't return hospitals list
-        setHospitals([
-          { hospitalId: 'HOSP001', name: 'City General Hospital', city: 'New York', totalDoctors: 15, totalPatients: 120 },
-          { hospitalId: 'HOSP002', name: 'Metro Health Center', city: 'Los Angeles', totalDoctors: 12, totalPatients: 95 },
-          { hospitalId: 'HOSP003', name: 'Central Medical Institute', city: 'Chicago', totalDoctors: 18, totalPatients: 150 }
-        ]);
-      }
+      } 
     } catch (error) {
       toast.error('Failed to fetch hospitals');
-      // Show mock data on error
-      setHospitals([
-        { hospitalId: 'HOSP001', name: 'City General Hospital', city: 'New York', totalDoctors: 15, totalPatients: 120 },
-        { hospitalId: 'HOSP002', name: 'Metro Health Center', city: 'Los Angeles', totalDoctors: 12, totalPatients: 95 },
-        { hospitalId: 'HOSP003', name: 'Central Medical Institute', city: 'Chicago', totalDoctors: 18, totalPatients: 150 }
-      ]);
     } finally {
       setLoading(false);
     }
