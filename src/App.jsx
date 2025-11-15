@@ -28,8 +28,8 @@ const App = () => {
         <Route
           path="/showhos"
           element={
-          
-              <Dochos />
+          <ProtectedRoute allowedRoles={['admin']}><Dochos /></ProtectedRoute>
+              
            
           }
         />
