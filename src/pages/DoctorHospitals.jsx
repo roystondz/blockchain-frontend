@@ -4,6 +4,7 @@ import Card from "../components/Card";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Users, FileText, Eye, Upload,Hospital,MapPin } from "lucide-react";
 import Table from "../components/Table";
+import api from "../context/api";
 const DoctorHospitals = () => {
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -15,12 +16,13 @@ const DoctorHospitals = () => {
   const fetchHospitals = async () => {
     setLoading(true);
     try {
-      const res = await api.get('https://localhost:3000/getSystemStats');
+      const res = await api.get('/getSystemStats');
       if (res.data.success && res.data.data.hospitals) {
         setHospitals(res.data.data.hospitals || []);
       } 
     } catch (error) {
       toast.error('Failed to fetch hospitals');
+
     } finally {
       setLoading(false);
     }

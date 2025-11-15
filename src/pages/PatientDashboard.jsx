@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { FileText, Shield, Settings, Users, Calendar, Eye, Trash2, UserCheck } from "lucide-react";
-
+import api from "../context/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import Table from "../components/Table";
@@ -37,7 +37,7 @@ const PatientDashboard = () => {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const res = await api.post('https://localhost:3000/getAllRecordsByPatientId', {
+      const res = await api.post('/getAllRecordsByPatientId', {
         userId: patientId,
         patientId
       });
@@ -53,7 +53,7 @@ const PatientDashboard = () => {
   
   const fetchAccessList = async () => {
     try {
-      const res = await api.post('https://localhost:3000/getAccessList', {
+      const res = await api.post('/getAccessList', {
         hospitalId: 'HOSP001', // This should be dynamic based on patient's hospital
         patientId
       });
@@ -70,7 +70,7 @@ const PatientDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('https://localhost:3000/grantAccess', {
+      const res = await api.post('/grantAccess', {
         patientId,
         doctorIdToGrant: grantForm.doctorIdToGrant,
         hospitalId: grantForm.hospitalId
@@ -92,7 +92,7 @@ const PatientDashboard = () => {
     if (!window.confirm('Are you sure you want to revoke access?')) return;
     
     try {
-      const res = await api.post('https://localhost:3000/revokeAccess', {
+      const res = await api.post('/revokeAccess', {
         userId: patientId,
         patientId,
         doctorId
@@ -111,7 +111,7 @@ const PatientDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('https://localhost:3000/updatePatientProfile', {
+      const res = await api.post('/updatePatientProfile', {
         userId: patientId,
         ...profileForm
       });

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { toast } from "react-hot-toast";
 import { UserPlus } from "lucide-react";
-
+import api from "../context/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import InputField from "../components/InputField";
@@ -34,7 +34,7 @@ const HospitalDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('https://localhost:3000/registerDoctor', doctorForm);
+      const res = await api.post('/registerDoctor', doctorForm);
       if (res.data.success) {
         toast.success('Doctor registered successfully!');
         setDoctorForm({ ...doctorForm, doctorId: '', name: '', department: '' });
@@ -53,7 +53,7 @@ const HospitalDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('https://localhost:3000/registerPatient', patientForm);
+      const res = await api.post('/registerPatient', patientForm);
       if (res.data.success) {
         toast.success('Patient registered successfully!');
         setPatientForm({ ...patientForm, patientId: '', name: '', dob: '' });

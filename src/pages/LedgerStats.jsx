@@ -7,7 +7,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import getUserRole from "../utils/getUserRole";
 
-
+import api from "../context/api";
 const LedgerStats = () => {
   const [ledger, setLedger] = useState([]);
   const [stats, setStats] = useState(null);
@@ -23,8 +23,8 @@ const LedgerStats = () => {
     setLoading(true);
     try {
       const [ledgerRes, statsRes] = await Promise.all([
-        api.post('https://localhost:3000/fetchLedger', { userId }),
-        api.get('https://localhost:3000/getSystemStats')
+        api.post('/fetchLedger', { userId }),
+        api.get('/getSystemStats')
       ]);
       
       if (ledgerRes.data.success) {

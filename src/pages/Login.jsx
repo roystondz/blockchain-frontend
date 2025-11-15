@@ -6,7 +6,7 @@ import InputField from "../components/InputField";
 import Button from "../components/Button";
 import api from "../api/api";
 import getUserRole from "../utils/getUserRole";
-
+import api from "../context/api";
 const Login = () => {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +35,7 @@ const Login = () => {
       if (mockMode) {
         localStorage.setItem("userId", userId);
         const role = getUserRole(userId);
-        toast.success(`Mock login successful as ${role}!`);
+        toast.success(` login successful as ${role}!`);
         navigate(`/${role}`);
         return;
       }
