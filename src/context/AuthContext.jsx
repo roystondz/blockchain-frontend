@@ -14,11 +14,11 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
-
+console.log("0")
   const getUserRole = (id) => {
     if (id.startsWith('PAT')) return 'patient';
     if (id.startsWith('DOC')) return 'doctor';
-    if (id.startsWith('HOSP') || id.startsWith('ADMIN')) return 'admin';
+    if (id.startsWith('HOSP') || id.startsWith('hospitalADMIN')) return 'admin';
     return 'unknown';
   };
 

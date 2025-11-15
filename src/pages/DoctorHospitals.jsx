@@ -40,7 +40,7 @@ const DoctorHospitals = () => {
   };
   
   return (
-    <DashboardLayout role="doctor" userName="Doctor">
+    <DashboardLayout role="admin" userName="admin">
       <Card title="Hospitals Network" icon={Hospital}>
         {loading ? (
           <p className="text-center text-gray-500 py-8">Loading hospitals...</p>
