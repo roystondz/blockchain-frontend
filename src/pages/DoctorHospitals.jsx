@@ -15,7 +15,7 @@ const DoctorHospitals = () => {
   const fetchHospitals = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/getSystemStats');
+      const res = await api.get('https://localhost:3000/getSystemStats');
       if (res.data.success && res.data.data.hospitals) {
         setHospitals(res.data.data.hospitals || []);
       } 

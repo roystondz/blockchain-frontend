@@ -37,7 +37,7 @@ const PatientDashboard = () => {
   const fetchRecords = async () => {
     setLoading(true);
     try {
-      const res = await api.post('/getAllRecordsByPatientId', {
+      const res = await api.post('https://localhost:3000/getAllRecordsByPatientId', {
         userId: patientId,
         patientId
       });
@@ -53,7 +53,7 @@ const PatientDashboard = () => {
   
   const fetchAccessList = async () => {
     try {
-      const res = await api.post('/getAccessList', {
+      const res = await api.post('https://localhost:3000/getAccessList', {
         hospitalId: 'HOSP001', // This should be dynamic based on patient's hospital
         patientId
       });
@@ -70,7 +70,7 @@ const PatientDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/grantAccess', {
+      const res = await api.post('https://localhost:3000/grantAccess', {
         patientId,
         doctorIdToGrant: grantForm.doctorIdToGrant,
         hospitalId: grantForm.hospitalId
@@ -92,7 +92,7 @@ const PatientDashboard = () => {
     if (!window.confirm('Are you sure you want to revoke access?')) return;
     
     try {
-      const res = await api.post('/revokeAccess', {
+      const res = await api.post('https://localhost:3000/revokeAccess', {
         userId: patientId,
         patientId,
         doctorId
@@ -111,7 +111,7 @@ const PatientDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/updatePatientProfile', {
+      const res = await api.post('https://localhost:3000/updatePatientProfile', {
         userId: patientId,
         ...profileForm
       });

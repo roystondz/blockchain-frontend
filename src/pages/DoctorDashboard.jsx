@@ -31,7 +31,7 @@ const DoctorDashboard = () => {
   const fetchPatients = async () => {
     setLoading(true);
     try {
-      const res = await api.post('/getPatientsForDoctor', { doctorId });
+      const res = await api.post('https://localhost:3000/getPatientsForDoctor', { doctorId });
    
       if (res.data.success) {
         setPatients(res.data.data || []);
@@ -47,7 +47,7 @@ const DoctorDashboard = () => {
   
   const fetchRecords = async (patientId) => {
     try {
-      const res = await api.post('/getAllRecordsByPatientId', {
+      const res = await api.post('https://localhost:3000/getAllRecordsByPatientId', {
         userId: doctorId,
         patientId
       });
@@ -80,7 +80,7 @@ const DoctorDashboard = () => {
     formData.append('report', recordForm.file);
     
     try {
-      const res = await api.post('/addRecord', formData, {
+      const res = await api.post('https://localhost:3000/addRecord', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {

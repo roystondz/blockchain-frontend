@@ -34,7 +34,7 @@ const HospitalDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/registerDoctor', doctorForm);
+      const res = await api.post('https://localhost:3000/registerDoctor', doctorForm);
       if (res.data.success) {
         toast.success('Doctor registered successfully!');
         setDoctorForm({ ...doctorForm, doctorId: '', name: '', department: '' });
@@ -53,7 +53,7 @@ const HospitalDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/registerPatient', patientForm);
+      const res = await api.post('https://localhost:3000/registerPatient', patientForm);
       if (res.data.success) {
         toast.success('Patient registered successfully!');
         setPatientForm({ ...patientForm, patientId: '', name: '', dob: '' });

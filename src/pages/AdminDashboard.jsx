@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   
   const fetchStats = async () => {
     try {
-      const res = await axios.get('/getSystemStats');
+      const res = await axios.get('https://localhost:3000/getSystemStats');
       if (res.data.success) {
         setStats(res.data.data);
       }
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await axios.post('/registerHospital', formData);
+      const res = await axios.post('https://localhost:3000/registerHospital', formData);
       if (res.data.success) {
         toast.success('Hospital registered successfully!');
         setFormData({ ...formData, hospitalId: '', name: '', city: '' });

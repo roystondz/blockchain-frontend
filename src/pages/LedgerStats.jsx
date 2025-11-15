@@ -23,8 +23,8 @@ const LedgerStats = () => {
     setLoading(true);
     try {
       const [ledgerRes, statsRes] = await Promise.all([
-        api.post('/fetchLedger', { userId }),
-        api.get('/getSystemStats')
+        api.post('https://localhost:3000/fetchLedger', { userId }),
+        api.get('https://localhost:3000/getSystemStats')
       ]);
       
       if (ledgerRes.data.success) {
