@@ -6,7 +6,7 @@ import InputField from "../components/InputField";
 import Button from "../components/Button";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
-
+import api from "../context/api";
 
 
 const AdminDashboard = () => {
@@ -25,7 +25,7 @@ const AdminDashboard = () => {
   
   const fetchStats = async () => {
     try {
-      const res = await axios.get('https://localhost:3000/getSystemStats');
+      const res = await api.get('/getSystemStats');
       if (res.data.success) {
         setStats(res.data.data);
       }
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await axios.post('https://localhost:3000/registerHospital', formData);
+      const res = await api.post('/registerHospital', formData);
       if (res.data.success) {
         toast.success('Hospital registered successfully!');
         setFormData({ ...formData, hospitalId: '', name: '', city: '' });

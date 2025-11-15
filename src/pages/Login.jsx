@@ -4,7 +4,6 @@ import { toast } from "react-hot-toast";
 import { Shield } from "lucide-react";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
-import api from "../api/api";
 import getUserRole from "../utils/getUserRole";
 import api from "../context/api";
 const Login = () => {
