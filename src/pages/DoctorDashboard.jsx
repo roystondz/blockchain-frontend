@@ -31,13 +31,14 @@ const DoctorDashboard = () => {
   const fetchPatients = async () => {
     setLoading(true);
     try {
-      const res = await api.post('https://localhost:3000/getPatientsForDoctor', { doctorId });
+      const res = await api.post('http://localhost:3000/getPatientsForDoctor', { doctorId });
    
       if (res.data.success) {
         setPatients(res.data.data || []);
       
        }
     } catch (error) {
+      console.error("Failed to fetch patients:", error);
       toast.error('Failed to fetch patients');
 
     } finally {
@@ -47,7 +48,7 @@ const DoctorDashboard = () => {
   
   const fetchRecords = async (patientId) => {
     try {
-      const res = await api.post('https://localhost:3000/getAllRecordsByPatientId', {
+      const res = await api.post('http://localhost:3000/getAllRecordsByPatientId', {
         userId: doctorId,
         patientId
       });
@@ -55,6 +56,7 @@ const DoctorDashboard = () => {
         setRecords(res.data.data || []);
       }
     } catch (error) {
+      console.error('Failed to fetch records:', error);
       toast.error('Failed to fetch records');
     }
   };
@@ -80,7 +82,7 @@ const DoctorDashboard = () => {
     formData.append('report', recordForm.file);
     
     try {
-      const res = await api.post('https://localhost:3000/addRecord', formData, {
+      const res = await api.post('http://localhost:3000/addRecord', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
@@ -162,9 +164,9 @@ const DoctorDashboard = () => {
                   <td className="px-6 py-4 text-sm text-gray-700">{record.diagnosis}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{record.prescription}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {record.ipfsHash && (
+                    {record.reportHash && (
                       <a
-                        href={`https://gateway.pinata.cloud/ipfs/${record.ipfsHash}`}
+                        href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 flex items-center gap-1"

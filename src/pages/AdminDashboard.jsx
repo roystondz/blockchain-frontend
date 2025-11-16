@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+
 import { toast } from "react-hot-toast";
 import { Hospital, Users } from "lucide-react";
 import InputField from "../components/InputField";
@@ -25,8 +25,9 @@ const AdminDashboard = () => {
   
   const fetchStats = async () => {
     try {
-      const res = await api.get('/getSystemStats');
+      const res = await api.post('/getSystemStats',{userId:"HOSP-01"});
       if (res.data.success) {
+        console.log('Stats fetched:', res.data.data);
         setStats(res.data.data);
       }
     } catch (error) {
@@ -57,16 +58,17 @@ const AdminDashboard = () => {
   return (
     <DashboardLayout role="admin" userName="Administrator">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <Card title="Total Hospitals" icon={Hospital}>
-          <p className="text-3xl font-bold text-blue-600">{stats?.totalHospitals || 0}</p>
-        </Card>
-        <Card title="Total Doctors" icon={Users}>
-          <p className="text-3xl font-bold text-teal-600">{stats?.totalDoctors || 0}</p>
-        </Card>
-        <Card title="Total Patients" icon={Users}>
-          <p className="text-3xl font-bold text-green-600">{stats?.totalPatients || 0}</p>
-        </Card>
-      </div>
+  <Card title="Total Hospitals" icon={Hospital}>
+    <p className="text-3xl font-bold text-blue-600">{stats?.hospitals || 0}</p>
+  </Card>
+  <Card title="Total Doctors" icon={Users}>
+    <p className="text-3xl font-bold text-teal-600">{stats?.doctors || 0}</p>
+  </Card>
+  <Card title="Total Patients" icon={Users}>
+    <p className="text-3xl font-bold text-green-600">{stats?.patients || 0}</p>
+  </Card>
+</div>
+
       
       <Card title="Register New Hospital" icon={Hospital}>
         <form onSubmit={handleRegisterHospital}>

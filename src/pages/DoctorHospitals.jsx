@@ -16,11 +16,12 @@ const DoctorHospitals = () => {
   const fetchHospitals = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/getSystemStats');
-      if (res.data.success && res.data.data.hospitals) {
-        setHospitals(res.data.data.hospitals || []);
-      } 
+      const res = await api.post('/getHospitalStats', { userId: "HOSP-01" });
+      console.log("Hospitals fetched: ", res.data.data);
+      setHospitals(res.data.data || []);
+
     } catch (error) {
+      console.error("Failed to fetch hospitals:", error);
       toast.error('Failed to fetch hospitals');
 
     } finally {
@@ -55,7 +56,7 @@ const DoctorHospitals = () => {
             </div>
             
             <Table
-              headers={['Hospital ID', 'Hospital Name', 'City', 'Doctors', 'Patients']}
+              headers={['Hospital ID', 'Hospital Name', 'City', 'Doctors']}
               data={hospitals}
               renderRow={(hospital) => (
                 <tr key={hospital.hospitalId}>
@@ -76,11 +77,11 @@ const DoctorHospitals = () => {
                       {hospital.totalDoctors || 0} Doctors
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                     <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
                       {hospital.totalPatients || 0} Patients
                     </span>
-                  </td>
+                  </td> */}
                 </tr>
               )}
             />
