@@ -21,7 +21,7 @@ const Sidebar = ({ role, isOpen, onClose }) => {
     ],
     doctor: [
       { icon: Home, label: 'Dashboard', path: '/doctor' },
-      { icon: Database, label: 'Ledger Stats', path: '/ledger' }
+      
     ],
     patient: [
       { icon: Home, label: 'Dashboard', path: '/patient' },

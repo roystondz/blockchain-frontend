@@ -27,6 +27,7 @@ const LedgerStats = () => {
 
       if (ledgerRes.data.success) {
         setLedger(ledgerRes.data.data || []);
+        console.log(ledgerRes);
       }
 
       if (statsRes.data.success) {
@@ -85,9 +86,28 @@ const LedgerStats = () => {
         Entry #{idx + 1} — {entry.type.toUpperCase()}
       </span>
       <span className="text-xs text-gray-500">
-        {entry.value.timestamp
-          ? new Date(entry.value.timestamp * 1000).toLocaleString()
-          : ""}
+      {entry.value.timestamp ? (
+  (() => {
+    const ts = entry.value.timestamp;
+
+    // If ts is numeric (UNIX seconds)
+    if (!isNaN(ts)) {
+      const num = Number(ts);
+      if (!isNaN(num)) {
+        return new Date(num * 1000).toLocaleString();
+      }
+    }
+
+    // If ts is ISO date string
+    const d = new Date(ts);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleString();
+    }
+
+    return "Invalid timestamp";
+  })()
+) : ""}
+
       </span>
     </div>
 
