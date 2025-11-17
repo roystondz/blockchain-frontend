@@ -5,20 +5,22 @@ import { Hospital, Users, FileText, Database } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import api from "../context/api";
+import Spinner from "../components/Spinner";
 
 const LedgerStats = () => {
   const [ledger, setLedger] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const userId = "HOSP-01"; // replace later with localStorage if needed
-  const role = "hospital";
-
+  const role = "admin";
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
   useEffect(() => {
     fetchData();
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
+    await delay(500);
     try {
       const [ledgerRes, statsRes] = await Promise.all([
         api.post("/fetchLedger", { userId }),
@@ -42,7 +44,7 @@ const LedgerStats = () => {
   };
 
   return (
-    <DashboardLayout role={role} userName="User">
+    <DashboardLayout role={role} userName="Admin">
       {/* Top 4 Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <Card title="Total Hospitals" icon={Hospital}>
@@ -70,7 +72,7 @@ const LedgerStats = () => {
       {/* Ledger List */}
       <Card title="Blockchain Ledger" icon={Database}>
         {loading ? (
-          <p className="text-center text-gray-500 py-8">Loading ledger...</p>
+          <Spinner/>
         ) : (
           <div className="overflow-x-auto">
             <div className="max-h-96 overflow-y-auto">

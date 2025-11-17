@@ -5,16 +5,19 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { Users, FileText, Eye, Upload,Hospital,MapPin } from "lucide-react";
 import Table from "../components/Table";
 import api from "../context/api";
+import Spinner from "../components/Spinner";
 const DoctorHospitals = () => {
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   useEffect(() => {
     fetchHospitals();
   }, []);
   
   const fetchHospitals = async () => {
     setLoading(true);
+    await delay(200);
     try {
       const res = await api.post('/getHospitalStats', { userId: "HOSP-01" });
       console.log("Hospitals fetched: ", res.data.data);
@@ -30,10 +33,10 @@ const DoctorHospitals = () => {
   };
   
   return (
-    <DashboardLayout role="admin" userName="admin">
+    <DashboardLayout role="admin" userName="Admin">
       <Card title="Hospitals Network" icon={Hospital}>
         {loading ? (
-          <p className="text-center text-gray-500 py-8">Loading hospitals...</p>
+          <Spinner/>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
