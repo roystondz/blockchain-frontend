@@ -283,13 +283,10 @@ const PatientDashboard = () => {
           title="Doctor Access Control"
           icon={Shield}
           action={
-            <Button onClick={() => {
-              fetchProfile();          // fetch latest values
-              setShowUpdateProfile(true);
-            }}>
-              <UserCheck className="w-4 h-4 inline mr-2" />
-              Grant Access
-            </Button>
+            <Button onClick={() => setShowGrantAccess(true)}>
+  <UserCheck className="w-4 h-4 inline mr-2" />
+  Grant Access
+</Button>
           }
         >
           <Table
@@ -381,7 +378,9 @@ const PatientDashboard = () => {
         ============================================= */}
       <Modal
         isOpen={showUpdateProfile}
-        onClose={() => setShowUpdateProfile(false)}
+        onClose={() => setShowUpdateProfile(false)
+          
+        }
         title="Update Profile"
       >
         <form onSubmit={handleUpdateProfile}>
