@@ -11,7 +11,13 @@ import PatientDashboard from './pages/PatientDashboard';
 import LedgerStats from './pages/LedgerStats';
 import BlockchainExplorer from './pages/BlockchainExplorer';
 import Dochos from './pages/DoctorHospitals'
+
+
+
+
 const App = () => {
+  
+
   return (
     <Router>
       <Toaster position="top-right" />

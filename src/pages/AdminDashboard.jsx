@@ -8,10 +8,22 @@ import Card from "../components/Card";
 import api from "../context/api";
 import Spinner from "../components/Spinner";
 import { useNavigate } from "react-router-dom"; // ⭐ Added for redirect
+import { checkServerStatus } from "../utils/checkServer";
+
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard"); // ⭐ NEW
   const navigate = useNavigate();
+
+  const [serverDown, setServerDown] = useState(false);
+
+useEffect(() => {
+  (async () => {
+    const status = await checkServerStatus();
+    setServerDown(!status);
+  })();
+}, []);
+
 
   const [formData, setFormData] = useState({
     adminId: localStorage.getItem("userId") || "",
@@ -64,6 +76,17 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+  if (serverDown) {
+    return (
+      <div className="text-center text-red-600 text-xl mt-10">
+        🚨 Server is currently down for maintenance.
+        <br />
+        Please try again later.
+      </div>
+    );
+  }
+  
 
   return (
     <DashboardLayout role="admin" userName="Admin">

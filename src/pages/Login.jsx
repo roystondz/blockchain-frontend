@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect,useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { Shield } from "lucide-react";
@@ -6,7 +6,27 @@ import InputField from "../components/InputField";
 import Button from "../components/Button";
 import getUserRole from "../utils/getUserRole";
 import api from "../context/api";
+import { checkServerStatus } from "../utils/checkServer";
+
 const Login = () => {
+  const [serverDown, setServerDown] = useState(false);
+  const toastShownRef = useRef(false);
+
+useEffect(() => {
+  (async () => {
+    const status = await checkServerStatus();
+
+    if (!status && !toastShownRef.current) {
+      toastShownRef.current = true;   // Prevent double toast
+      toast.error("🚨 Server is down or under maintenance.");
+    }
+
+    setServerDown(!status);
+  })();
+}, []);
+  
+  
+
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -29,7 +49,7 @@ const Login = () => {
 
     setLoading(true);
     try {
-      const mockMode = true; // 🔧 set false when backend is ready
+      const mockMode = false; // 🔧 set false when backend is ready
 
       if (mockMode) {
         localStorage.setItem("userId", userId);
@@ -55,6 +75,9 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center p-4">
