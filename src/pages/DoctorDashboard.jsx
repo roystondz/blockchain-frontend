@@ -21,9 +21,15 @@ const DoctorDashboard = () => {
     prescription: '',
     file: null
   });
+
   const [loading, setLoading] = useState(false);
   const doctorId = localStorage.getItem('userId');
-  
+
+  // -----------------------------------------
+  // 🔍 ADDED: search state
+  // -----------------------------------------
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     fetchPatients();
   }, []);
@@ -32,11 +38,10 @@ const DoctorDashboard = () => {
     setLoading(true);
     try {
       const res = await api.post('http://localhost:3000/getPatientsForDoctor', { doctorId });
-   
+
       if (res.data.success) {
         setPatients(res.data.data || []);
-      
-       }
+      }
     } catch (error) {
       console.error("Failed to fetch patients:", error);
       toast.error('Failed to fetch patients');
@@ -97,17 +102,43 @@ const DoctorDashboard = () => {
       setLoading(false);
     }
   };
-  
+
+  // ---------------------------------------------------
+  // 🔍 ADDED: Filter patients based on searchTerm
+  // ---------------------------------------------------
+  const filteredPatients = patients.filter((p) =>
+    Object.values(p)
+      .join(" ")
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
+
   return (
     <DashboardLayout role="doctor" userName="Doctor">
+
+      {/* ======================================================
+          PATIENT LIST VIEW
+      ======================================================= */}
       {!selectedPatient ? (
         <Card title="My Patients" icon={Users}>
+
+          {/* 🔍 ADDED SEARCH BAR */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search patients..."
+              className="border px-4 py-2 rounded w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           {loading ? (
             <p className="text-center text-gray-500 py-8">Loading patients...</p>
           ) : (
             <Table
               headers={['Patient ID', 'Name', 'DOB', 'City', 'Actions']}
-              data={patients}
+              data={filteredPatients}
               renderRow={(patient) => (
                 <tr key={patient.patientId}>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -133,6 +164,10 @@ const DoctorDashboard = () => {
           )}
         </Card>
       ) : (
+
+      /* ======================================================
+          PATIENT RECORDS VIEW
+      ======================================================= */
         <>
           <div className="mb-4">
             <Button onClick={() => setSelectedPatient(null)} variant="secondary">
@@ -180,7 +215,8 @@ const DoctorDashboard = () => {
               )}
             />
           </Card>
-          
+
+          {/* ADD RECORD MODAL */}
           <Modal isOpen={showAddRecord} onClose={() => setShowAddRecord(false)} title="Add Medical Record">
             <form onSubmit={handleAddRecord}>
               <InputField
@@ -197,6 +233,7 @@ const DoctorDashboard = () => {
                 placeholder="Prescribed medications"
                 required
               />
+              
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Medical Report <span className="text-red-500">*</span>
@@ -208,6 +245,7 @@ const DoctorDashboard = () => {
                   required
                 />
               </div>
+
               <div className="flex gap-3">
                 <Button type="submit" disabled={loading}>
                   {loading ? 'Uploading...' : 'Add Record'}

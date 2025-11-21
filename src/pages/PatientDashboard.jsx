@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { FileText, Shield, Settings, Users, Calendar, Eye, Trash2, UserCheck } from "lucide-react";
+import { FileText, Shield, Settings, Eye, Trash2, UserCheck } from "lucide-react";
 import api from "../context/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
@@ -29,6 +29,12 @@ const PatientDashboard = () => {
 
   const [loading, setLoading] = useState(false);
 
+  // ---------------------------------------------
+  // 🔍 ADDED SEARCH STATES
+  // ---------------------------------------------
+  const [searchTerm, setSearchTerm] = useState("");
+  const [doctorSearch, setDoctorSearch] = useState("");
+
   const patientId = localStorage.getItem("userId");
 
   useEffect(() => {
@@ -38,29 +44,30 @@ const PatientDashboard = () => {
   }, []);
 
   // ---------------------------------------------
-  // Fetch Records
+  // Fetch Profile
   // ---------------------------------------------
-
   const fetchProfile = async () => {
     try {
       const res = await api.post("/getPatientProfile", { userId: patientId });
-  
+
       let data = res.data.data;
       if (typeof data === "string") data = JSON.parse(data);
-  
+
       setProfileForm({
         name: data.name || "",
         dob: data.dob || "",
         city: data.city || ""
       });
-  
+
     } catch (error) {
       console.error("Failed to fetch profile:", error);
       toast.error("Failed to load profile");
     }
   };
-  
 
+  // ---------------------------------------------
+  // Fetch Records
+  // ---------------------------------------------
   const fetchRecords = async () => {
     setLoading(true);
     try {
@@ -71,7 +78,6 @@ const PatientDashboard = () => {
 
       let data = res.data.data;
 
-      // If chaincode returned string → parse it
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
@@ -95,11 +101,9 @@ const PatientDashboard = () => {
       const res = await api.post("/getAccessList", {
         userId: patientId,
         patientId
-    });
+      });
 
       let data = res.data.data;
-      // If chaincode returned string → parse it
-      console.log("Access list fetched:", data);
       if (typeof data === "string") {
         data = JSON.parse(data);
       }
@@ -187,6 +191,17 @@ const PatientDashboard = () => {
     }
   };
 
+  // ---------------------------------------------
+  // 🔍 FILTER LOGIC (ADDED)
+  // ---------------------------------------------
+  const filteredRecords = records.filter((item) =>
+    Object.values(item).join(" ").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAccessList = accessList.filter((item) =>
+    Object.values(item).join(" ").toLowerCase().includes(doctorSearch.toLowerCase())
+  );
+
   return (
     <DashboardLayout role="patient" userName="Patient">
       {/* TABS */}
@@ -229,9 +244,20 @@ const PatientDashboard = () => {
 
       {/* =============================================
           TAB 1 — RECORDS
-        ============================================= */}
+      ============================================= */}
       {activeTab === "records" && (
         <Card title="My Medical Records" icon={FileText}>
+          {/* 🔍 Search Bar */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search records..."
+              className="border px-4 py-2 rounded w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           {loading ? (
             <p className="text-center text-gray-500 py-8">Loading records...</p>
           ) : (
@@ -244,7 +270,7 @@ const PatientDashboard = () => {
                 "Prescription",
                 "Report"
               ]}
-              data={records}
+              data={filteredRecords} // ⬅ UPDATED
               renderRow={(record) => (
                 <tr key={record.recordId}>
                   <td className="px-6 py-4">{record.recordId}</td>
@@ -255,18 +281,17 @@ const PatientDashboard = () => {
                   <td className="px-6 py-4">{record.diagnosis}</td>
                   <td className="px-6 py-4">{record.prescription}</td>
                   <td className="px-6 py-4">
-                  {record.reportHash && (
-  <a
-    href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-  >
-    <Eye className="w-4 h-4" />
-    View
-  </a>
-)}
-
+                    {record.reportHash && (
+                      <a
+                        href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View
+                      </a>
+                    )}
                   </td>
                 </tr>
               )}
@@ -277,18 +302,29 @@ const PatientDashboard = () => {
 
       {/* =============================================
           TAB 2 — ACCESS CONTROL
-        ============================================= */}
+      ============================================= */}
       {activeTab === "access" && (
         <Card
           title="Doctor Access Control"
           icon={Shield}
           action={
             <Button onClick={() => setShowGrantAccess(true)}>
-  <UserCheck className="w-4 h-4 inline mr-2" />
-  Grant Access
-</Button>
+              <UserCheck className="w-4 h-4 inline mr-2" />
+              Grant Access
+            </Button>
           }
         >
+          {/* 🔍 Doctor Search */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search doctor..."
+              className="border px-4 py-2 rounded w-full"
+              value={doctorSearch}
+              onChange={(e) => setDoctorSearch(e.target.value)}
+            />
+          </div>
+
           <Table
             headers={[
               "Doctor ID",
@@ -297,7 +333,7 @@ const PatientDashboard = () => {
               "Hospital",
               "Actions"
             ]}
-            data={accessList}
+            data={filteredAccessList} // ⬅ UPDATED
             renderRow={(access) => (
               <tr key={access.doctorId}>
                 <td className="px-6 py-4">{access.doctorId}</td>
@@ -321,7 +357,7 @@ const PatientDashboard = () => {
 
       {/* =============================================
           TAB 3 — PROFILE
-        ============================================= */}
+      ============================================= */}
       {activeTab === "profile" && (
         <Card title="Update Profile" icon={Settings}>
           <Button onClick={() => setShowUpdateProfile(true)}>
@@ -332,7 +368,7 @@ const PatientDashboard = () => {
 
       {/* =============================================
           MODAL — GRANT ACCESS
-        ============================================= */}
+      ============================================= */}
       <Modal
         isOpen={showGrantAccess}
         onClose={() => setShowGrantAccess(false)}
@@ -375,12 +411,10 @@ const PatientDashboard = () => {
 
       {/* =============================================
           MODAL — UPDATE PROFILE
-        ============================================= */}
+      ============================================= */}
       <Modal
         isOpen={showUpdateProfile}
-        onClose={() => setShowUpdateProfile(false)
-          
-        }
+        onClose={() => setShowUpdateProfile(false)}
         title="Update Profile"
       >
         <form onSubmit={handleUpdateProfile}>
