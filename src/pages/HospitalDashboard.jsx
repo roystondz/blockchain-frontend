@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+
 import { toast } from "react-hot-toast";
 import { UserPlus } from "lucide-react";
 import api from "../context/api";

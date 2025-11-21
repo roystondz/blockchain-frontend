@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { Hospital, Users } from "lucide-react";
+import { Hospital, Users, Blocks } from "lucide-react"; // ⭐ ADDED Blocks icon
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import api from "../context/api";
 import Spinner from "../components/Spinner";
+import { useNavigate } from "react-router-dom"; // ⭐ Added for redirect
 
 const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState("dashboard"); // ⭐ NEW
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     adminId: localStorage.getItem("userId") || "",
     hospitalId: "",
@@ -19,6 +23,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   useEffect(() => {
@@ -31,7 +36,6 @@ const AdminDashboard = () => {
     try {
       const res = await api.post("/getSystemStats", { userId: "HOSP-01" });
       if (res.data.success) {
-        console.log("Stats fetched:", res.data.data);
         setStats(res.data.data);
       }
     } catch (error) {
@@ -63,95 +67,141 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout role="admin" userName="Admin">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        
-        {/* Total Hospitals */}
-        <Card title="Total Hospitals" icon={Hospital}>
-          {statsLoading ? (
-            <Spinner size={8} color="blue" />
-          ) : (
-            <p className="text-3xl font-bold text-blue-600">
-              {stats?.hospitals || 0}
-            </p>
-          )}
-        </Card>
 
-        {/* Total Doctors */}
-        <Card title="Total Doctors" icon={Users}>
-          {statsLoading ? (
-            <Spinner size={8} color="teal" />
-          ) : (
-            <p className="text-3xl font-bold text-teal-600">
-              {stats?.doctors || 0}
-            </p>
-          )}
-        </Card>
+      {/* ⭐ TOP TAB BAR ⭐ */}
+      <div className="mb-6">
+        <div className="flex gap-2 border-b">
 
-        {/* Total Patients */}
-        <Card title="Total Patients" icon={Users}>
-          {statsLoading ? (
-            <Spinner size={8} color="green" />
-          ) : (
-            <p className="text-3xl font-bold text-green-600">
-              {stats?.patients || 0}
-            </p>
-          )}
-        </Card>
+          {/* Dashboard Tab */}
+          <button
+            onClick={() => setActiveTab("dashboard")}
+            className={`px-6 py-3 font-medium ${
+              activeTab === "dashboard"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-600"
+            }`}
+          >
+            Dashboard
+          </button>
+
+          {/* Register Hospital Tab */}
+          <button
+            onClick={() => setActiveTab("register")}
+            className={`px-6 py-3 font-medium ${
+              activeTab === "register"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-600"
+            }`}
+          >
+            Register Hospital
+          </button>
+
+          {/* ⭐ Blockchain Explorer Tab */}
+          <button
+            onClick={() => navigate("/explorer")}
+            className="px-6 py-3 font-medium text-gray-600 hover:text-blue-600 flex items-center gap-2"
+          >
+            <Blocks className="w-4 h-4" />
+            Blockchain Explorer
+          </button>
+
+        </div>
       </div>
 
-      {/* Register Hospital Form */}
-      <Card title="Register New Hospital" icon={Hospital}>
-        <form onSubmit={handleRegisterHospital}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* ⭐ TAB 1: DASHBOARD (STATS) */}
+      {activeTab === "dashboard" && (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
-            <InputField
-              label="Hospital ID"
-              value={formData.hospitalId}
-              onChange={(e) =>
-                setFormData({ ...formData, hospitalId: e.target.value })
-              }
-              placeholder="HOSP001"
-              required
-            />
-
-            <InputField
-              label="Hospital Name"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-              placeholder="City General Hospital"
-              required
-            />
-
-            <InputField
-              label="City"
-              value={formData.city}
-              onChange={(e) =>
-                setFormData({ ...formData, city: e.target.value })
-              }
-              placeholder="New York"
-              required
-            />
-
-          </div>
-
-          <div className="mt-4">
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Registering...
-                </div>
+            <Card title="Total Hospitals" icon={Hospital}>
+              {statsLoading ? (
+                <Spinner size={8} color="blue" />
               ) : (
-                "Register Hospital"
+                <p className="text-3xl font-bold text-blue-600">
+                  {stats?.hospitals || 0}
+                </p>
               )}
-            </Button>
-          </div>
+            </Card>
 
-        </form>
-      </Card>
+            <Card title="Total Doctors" icon={Users}>
+              {statsLoading ? (
+                <Spinner size={8} color="teal" />
+              ) : (
+                <p className="text-3xl font-bold text-teal-600">
+                  {stats?.doctors || 0}
+                </p>
+              )}
+            </Card>
+
+            <Card title="Total Patients" icon={Users}>
+              {statsLoading ? (
+                <Spinner size={8} color="green" />
+              ) : (
+                <p className="text-3xl font-bold text-green-600">
+                  {stats?.patients || 0}
+                </p>
+              )}
+            </Card>
+
+          </div>
+        </>
+      )}
+
+      {/* ⭐ TAB 2: REGISTER HOSPITAL FORM */}
+      {activeTab === "register" && (
+        <Card title="Register New Hospital" icon={Hospital}>
+          <form onSubmit={handleRegisterHospital}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <InputField
+                label="Hospital ID"
+                value={formData.hospitalId}
+                onChange={(e) =>
+                  setFormData({ ...formData, hospitalId: e.target.value })
+                }
+                placeholder="HOSP001"
+                required
+              />
+
+              <InputField
+                label="Hospital Name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                placeholder="City General Hospital"
+                required
+              />
+
+              <InputField
+                label="City"
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData({ ...formData, city: e.target.value })
+                }
+                placeholder="New York"
+                required
+              />
+
+            </div>
+
+            <div className="mt-4">
+              <Button type="submit" disabled={loading}>
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Registering...
+                  </div>
+                ) : (
+                  "Register Hospital"
+                )}
+              </Button>
+            </div>
+
+          </form>
+        </Card>
+      )}
+
     </DashboardLayout>
   );
 };

@@ -9,6 +9,7 @@ import HospitalDashboard from './pages/HospitalDashboard';
 import DoctorDashboard from './pages/DoctorDashboard';
 import PatientDashboard from './pages/PatientDashboard';
 import LedgerStats from './pages/LedgerStats';
+import BlockchainExplorer from './pages/BlockchainExplorer';
 import Dochos from './pages/DoctorHospitals'
 const App = () => {
   return (
@@ -25,6 +26,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/explorer"
+  element={
+    <ProtectedRoute allowedRoles={['admin']}>
+      <BlockchainExplorer />
+    </ProtectedRoute>
+  }
+/>
+
         <Route
           path="/showhos"
           element={
