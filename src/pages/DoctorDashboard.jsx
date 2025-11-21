@@ -32,6 +32,7 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     fetchPatients();
+    fetchDoctorInfo();
   }, []);
   
   const fetchPatients = async () => {
@@ -103,6 +104,28 @@ const DoctorDashboard = () => {
     }
   };
 
+  const [doctorName, setDoctorName] = useState("");
+const [doctorDept, setDoctorDept] = useState("");
+
+const fetchDoctorInfo = async () => {
+  try {
+    const res = await api.post("http://localhost:3000/getDoctorInfo", {
+      userId: doctorId,
+      doctorId: doctorId
+    });
+
+    if (res.data.success) {
+      const doc = JSON.parse(res.data.data);
+
+      setDoctorName(doc.name);
+      setDoctorDept(doc.department);   // NEW
+    }
+  } catch (error) {
+    console.error("Error fetching doctor info:", error);
+  }
+};
+
+
   // ---------------------------------------------------
   // 🔍 ADDED: Filter patients based on searchTerm
   // ---------------------------------------------------
@@ -114,7 +137,12 @@ const DoctorDashboard = () => {
   );
 
   return (
-    <DashboardLayout role="doctor" userName="Doctor">
+    <DashboardLayout
+  role="doctor"
+  userName={`Dr. ${doctorName}${doctorDept ? ` (${doctorDept})` : ""}`}
+>
+
+  
 
       {/* ======================================================
           PATIENT LIST VIEW

@@ -203,7 +203,7 @@ const PatientDashboard = () => {
   );
 
   return (
-    <DashboardLayout role="patient" userName="Patient">
+    <DashboardLayout role="patient" userName={profileForm.name}>
       {/* TABS */}
       <div className="mb-6">
         <div className="flex gap-2 border-b">
