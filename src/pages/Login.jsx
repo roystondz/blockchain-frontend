@@ -66,8 +66,8 @@ useEffect(() => {
         const role = getUserRole(userId);
         toast.success("Login successful!");
         navigate(`/${role}`);
-      } else {
-        toast.error(res.data.message || "Login failed");
+      } else if(res.data.status == "inactive") {
+        toast.error(res.data.message || "Login failed -> Account Deactivated");
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Login failed");

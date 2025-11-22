@@ -25,7 +25,8 @@ const HospitalDashboard = () => {
     hospitalName: '',
     name: '',
     dob: '',
-    city: ''
+    city: '',
+    mobile:''
   });
   const [loading, setLoading] = useState(false);
   
@@ -94,7 +95,7 @@ const HospitalDashboard = () => {
                 label="Doctor ID"
                 value={doctorForm.doctorId}
                 onChange={(e) => setDoctorForm({ ...doctorForm, doctorId: e.target.value })}
-                placeholder="DOC001"
+                placeholder="DOC-01"
                 required
               />
               <InputField
@@ -165,6 +166,13 @@ const HospitalDashboard = () => {
                 type="date"
                 value={patientForm.dob}
                 onChange={(e) => setPatientForm({ ...patientForm, dob: e.target.value })}
+                required
+              />
+              <InputField
+                label="Mobile"
+                type="number"
+                value={patientForm.mobile}
+                onChange={(e) => setPatientForm({ ...patientForm, mobile: e.target.value })}
                 required
               />
               <InputField
