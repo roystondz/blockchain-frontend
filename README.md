@@ -62,7 +62,7 @@ It provides separate dashboards for **Hospital Admin**, **Doctors**, **Patients*
 ### 1️⃣ Clone the repository
 
 ```sh
-$ git clone https://github.com/yourusername/frontend_final.git
+$ git clone https://github.com/roystondz/blockchain-frontend.git
 $ cd frontend_final
 ```
 
