@@ -22,7 +22,6 @@ const BlockchainExplorer = () => {
     setLoading(true);
     try {
       const res = await api.get("http://localhost:3000/getBlockchainInfo");
-
       if (res.data.success) {
         setInfo(res.data.blockchain);
       }

@@ -113,10 +113,11 @@ const fetchDoctorInfo = async () => {
       userId: doctorId,
       doctorId: doctorId
     });
+    
 
-    if (res.data.success) {
-      const doc = JSON.parse(res.data.data);
-
+    if (res.data) {
+      const doc = (res.data.data);
+      
       setDoctorName(doc.name);
       setDoctorDept(doc.department);   // NEW
     }
