@@ -117,7 +117,6 @@ const fetchDoctorInfo = async () => {
 
     if (res.data) {
       const doc = (res.data.data);
-      
       setDoctorName(doc.name);
       setDoctorDept(doc.department);   // NEW
     }
