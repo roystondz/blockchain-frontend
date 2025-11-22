@@ -1,18 +1,97 @@
-# React + Vite
+# 🏥 EHR Frontend (React + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the **frontend application** of the **Electronic Health Record (EHR) Blockchain System**, built using **React + Vite**.  
+It provides separate dashboards for **Hospital Admin**, **Doctors**, **Patients**, and **System Admin**, and communicates with the backend (`server-node-sdk`) that interacts with **Hyperledger Fabric**.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Features
 
-## React Compiler
+### 🔐 Authentication & Role Detection
+- Login using IDs such as:
+  - `hospitalAdmin`
+  - `HOSP-01`
+  - `DOC-0001`
+  - `PAT-00000001`
+- Validates ID format before login
+- Detects user role automatically
+- Blocks inactive/deactivated accounts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🏥 Hospital Dashboard
+- View hospital-related stats
+- Manage doctors & patients (optional)
+- Interact with blockchain-fetched data
 
-## Expanding the ESLint configuration
+### 👨‍⚕️ Doctor Dashboard
+- View assigned patients
+- Add medical records (diagnosis, prescription, file uploads)
+- View complete patient history
+- File storage via IPFS (Pinata)
+- Record timestamps stored on blockchain
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# frontend_final
-# frontend_final
+### 🧑‍🤝‍🧑 Patient Dashboard
+- View personal medical profile
+- Grant and revoke doctor access
+- View medical history
+- Download uploaded medical reports
+
+### 🛡️ Admin Dashboard
+- View ledger audit data
+- View system allocations (hospitals, doctors, records)
+- Analytics based on chaincode stats
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| **Frontend Framework** | React (Vite) |
+| **Styling** | TailwindCSS |
+| **Icons** | Lucide Icons |
+| **State Management** | React Hooks |
+| **HTTP Client** | Axios |
+| **Backend** | Node.js (Fabric SDK) |
+| **Blockchain** | Hyperledger Fabric Test Network |
+| **Storage** | Pinata IPFS |
+
+---
+
+## 📦 Installation & Setup
+
+### 1️⃣ Clone the repository
+
+```sh
+$ git clone https://github.com/yourusername/frontend_final.git
+$ cd frontend_final
+```
+
+### 2️⃣ Install dependencies
+```sh
+$ npm install
+```
+
+### 3️⃣ Start development server
+```sh
+$ npm run dev
+```
+
+### 📁 Folder Structure
+```sh
+frontend_final/
+│── src/
+│   ├── components/        # Buttons, Inputs, Navbar, etc.
+│   ├── pages/             # Doctor, Patient, Hospital dashboards
+│   ├── layouts/           # Dashboard layout
+│   ├── utils/             # Helper functions
+│   ├── context/           # Axios instance + global config
+│   ├── App.jsx
+│   └── main.jsx
+│
+│── public/
+│── index.html
+│── package.json
+│── vite.config.js
+└── README.md
+```
+
