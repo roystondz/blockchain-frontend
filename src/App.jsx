@@ -11,6 +11,9 @@ import PatientDashboard from './pages/PatientDashboard';
 import LedgerStats from './pages/LedgerStats';
 import BlockchainExplorer from './pages/BlockchainExplorer';
 import Dochos from './pages/DoctorHospitals'
+import SearchPatients from "./pages/SearchPatients";
+import PatientAccessRequests from "./pages/PatientAccessRequests";
+import AllPatients from "./pages/AllPatients";
 
 
 
@@ -45,11 +48,12 @@ const App = () => {
           path="/showhos"
           element={
           <ProtectedRoute allowedRoles={['admin']}><Dochos /></ProtectedRoute>
-              
            
           }
         />
-        
+        <Route path="/doctor/all-patients" element={<AllPatients />} />
+        <Route path="/doctor/search" element={<SearchPatients />} />
+<Route path="/patient/requests" element={<PatientAccessRequests />} />
         <Route
           path="/hospital"
           element={

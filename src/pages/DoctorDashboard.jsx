@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../context/api";
 import { toast } from "react-hot-toast";
-import { Users, FileText, Eye, Upload } from "lucide-react";
+import {
+  Users,
+  FileText,
+  Eye,
+  Upload,
+  KeyRound,
+  Search,
+} from "lucide-react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
@@ -10,180 +17,325 @@ import Table from "../components/Table";
 import Modal from "../components/Modal";
 import InputField from "../components/InputField";
 
-
 const DoctorDashboard = () => {
-  const [patients, setPatients] = useState([]);
+  const doctorId = localStorage.getItem("userId");
+
+  const [activeTab, setActiveTab] = useState("mypatients");
+
+  const [myPatients, setMyPatients] = useState([]);
+  const [allPatients, setAllPatients] = useState([]);
+
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [requestPatient, setRequestPatient] = useState(null);
+
   const [records, setRecords] = useState([]);
   const [showAddRecord, setShowAddRecord] = useState(false);
-  const [recordForm, setRecordForm] = useState({
-    diagnosis: '',
-    prescription: '',
-    file: null
-  });
+  const [showRequestAccess, setShowRequestAccess] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const doctorId = localStorage.getItem('userId');
+  const [searchAll, setSearchAll] = useState("");
+  const [searchMy, setSearchMy] = useState("");
 
-  // -----------------------------------------
-  // 🔍 ADDED: search state
-  // -----------------------------------------
-  const [searchTerm, setSearchTerm] = useState("");
+  const [doctorInfo, setDoctorInfo] = useState({
+    name: "",
+    department: "",
+    hospitalId: "",
+    hospitalName: "",
+  });
+
+  // NEW: Loading states for buttons
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [addRecordLoading, setAddRecordLoading] = useState(false);
+
+  const [recordForm, setRecordForm] = useState({
+    diagnosis: "",
+    prescription: "",
+    file: null,
+  });
 
   useEffect(() => {
-    fetchPatients();
     fetchDoctorInfo();
+    fetchMyPatients();
+    fetchAllPatients();
   }, []);
-  
-  const fetchPatients = async () => {
-    setLoading(true);
+
+  // -----------------------------------
+  // GET DOCTOR INFO
+  // -----------------------------------
+  const fetchDoctorInfo = async () => {
     try {
-      const res = await api.post('/getPatientsForDoctor', { doctorId });
+      const res = await api.post("/getDoctorInfo", {
+        doctorId,
+        userId: doctorId,
+      });
 
       if (res.data.success) {
-        setPatients(res.data.data || []);
+        const d = res.data.data;
+        setDoctorInfo({
+          name: d.name,
+          department: d.department,
+          hospitalId: d.hospitalId,
+          hospitalName: d.hospitalName,
+        });
       }
-    } catch (error) {
-      console.error("Failed to fetch patients:", error);
-      toast.error('Failed to fetch patients');
+    } catch {
+      toast.error("Failed loading doctor info");
+    }
+  };
 
+  // -----------------------------------
+  // FETCH MY PATIENTS
+  // -----------------------------------
+  const fetchMyPatients = async () => {
+    try {
+      const res = await api.post("/getPatientsForDoctor", { doctorId });
+
+      let data = res.data.data;
+      if (typeof data === "string") data = JSON.parse(data);
+      if (!Array.isArray(data)) data = [];
+
+      setMyPatients(data);
+    } catch {
+      toast.error("Unable to load your patients");
+    }
+  };
+
+  // -----------------------------------
+  // FETCH ALL PATIENTS
+  // -----------------------------------
+  const fetchAllPatients = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/getAllPatients");
+
+      let data = res.data.data;
+      if (typeof data === "string") data = JSON.parse(data);
+      if (!Array.isArray(data)) data = [];
+
+      setAllPatients(data);
+    } catch {
+      toast.error("Unable to load all patients");
     } finally {
       setLoading(false);
     }
   };
-  
+
+  // -----------------------------------
+  // VIEW PATIENT RECORDS (My Patients → Always allowed)
+  // -----------------------------------
+  const handleViewPatient = async (patient, fromMyPatients = false) => {
+    try {
+      if (fromMyPatients) {
+        setSelectedPatient(patient);
+        fetchRecords(patient.patientId);
+        return;
+      }
+
+      // Check access for ALL patients
+      const res = await api.post("/doctor/checkAccess", {
+        doctorId,
+        patientId: patient.patientId,
+      });
+
+      if (res.data.access === true) {
+        setSelectedPatient(patient);
+        fetchRecords(patient.patientId);
+      } else {
+        toast.error("Access denied. Request access first.");
+      }
+    } catch {
+      toast.error("Error checking access");
+    }
+  };
+
+  // -----------------------------------
+  // FETCH RECORDS
+  // -----------------------------------
   const fetchRecords = async (patientId) => {
     try {
-      const res = await api.post('/getAllRecordsByPatientId', {
+      const res = await api.post("/getAllRecordsByPatientId", {
         userId: doctorId,
-        patientId
+        patientId,
       });
-      if (res.data.success) {
-        setRecords(res.data.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch records:', error);
-      toast.error('Failed to fetch records');
+
+      let data = res.data.data;
+      if (typeof data === "string") data = JSON.parse(data);
+      if (!Array.isArray(data)) data = [];
+
+      setRecords(data);
+    } catch {
+      toast.error("Could not load records");
     }
   };
-  
-  const handleViewPatient = (patient) => {
-    setSelectedPatient(patient);
-    fetchRecords(patient.patientId);
+
+  // -----------------------------------
+  // SEND ACCESS REQUEST (with loading)
+  // -----------------------------------
+  const sendAccessRequest = async () => {
+    setRequestLoading(true);
+    try {
+      await api.post("/doctor/requestAccess", {
+        doctorId,
+        patientId: requestPatient.patientId,
+        hospitalId: doctorInfo.hospitalId,
+        reason: "Need access for consultation",
+      });
+
+      toast.success("Access request sent!");
+      setShowRequestAccess(false);
+      setRequestPatient(null);
+    } catch {
+      toast.error("Failed to send request");
+    } finally {
+      setRequestLoading(false);
+    }
   };
-  
+
+  // -----------------------------------
+  // ADD RECORD (with loading)
+  // -----------------------------------
   const handleAddRecord = async (e) => {
     e.preventDefault();
-    if (!recordForm.file) {
-      toast.error('Please select a file');
-      return;
-    }
-    
-    setLoading(true);
+    if (!recordForm.file) return toast.error("Please upload a file");
+
+    setAddRecordLoading(true);
+
     const formData = new FormData();
-    formData.append('doctorId', doctorId);
-    formData.append('patientId', selectedPatient.patientId);
-    formData.append('diagnosis', recordForm.diagnosis);
-    formData.append('prescription', recordForm.prescription);
-    formData.append('report', recordForm.file);
-    
+    formData.append("doctorId", doctorId);
+    formData.append("patientId", selectedPatient.patientId);
+    formData.append("diagnosis", recordForm.diagnosis);
+    formData.append("prescription", recordForm.prescription);
+    formData.append("report", recordForm.file);
+
     try {
-      const res = await api.post('/addRecord', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+      await api.post("/addRecord", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      if (res.data.success) {
-        toast.success('Record added successfully!');
-        setShowAddRecord(false);
-        setRecordForm({ diagnosis: '', prescription: '', file: null });
-        fetchRecords(selectedPatient.patientId);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to add record');
+
+      toast.success("Record added");
+      setShowAddRecord(false);
+      setRecordForm({ diagnosis: "", prescription: "", file: null });
+      fetchRecords(selectedPatient.patientId);
+    } catch {
+      toast.error("Failed adding record");
     } finally {
-      setLoading(false);
+      setAddRecordLoading(false);
     }
   };
 
-  const [doctorName, setDoctorName] = useState("");
-const [doctorDept, setDoctorDept] = useState("");
+  // -----------------------------------
+  // FILTER LOGIC
+  // -----------------------------------
+  const myPatientIds = new Set(myPatients.map((p) => p.patientId));
 
-const fetchDoctorInfo = async () => {
-  try {
-    const res = await api.post("/getDoctorInfo", {
-      userId: doctorId,
-      doctorId: doctorId
-    });
-    
-
-    if (res.data) {
-      const doc = (res.data.data);
-      setDoctorName(doc.name);
-      setDoctorDept(doc.department);   // NEW
-    }
-  } catch (error) {
-    console.error("Error fetching doctor info:", error);
-  }
-};
-
-
-  // ---------------------------------------------------
-  // 🔍 ADDED: Filter patients based on searchTerm
-  // ---------------------------------------------------
-  const filteredPatients = patients.filter((p) =>
-    Object.values(p)
-      .join(" ")
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
+  const filteredMyPatients = myPatients.filter((p) =>
+    Object.values(p).join(" ").toLowerCase().includes(searchMy.toLowerCase())
   );
 
+  const filteredAllPatients = allPatients
+    .filter((p) => !myPatientIds.has(p.patientId)) // hide patients already accessed
+    .filter((p) =>
+      Object.values(p).join(" ").toLowerCase().includes(searchAll.toLowerCase())
+    );
+
   return (
-    <DashboardLayout
-  role="doctor"
-  userName={`Dr. ${doctorName}${doctorDept ? ` (${doctorDept})` : ""}`}
->
+    <DashboardLayout role="doctor" userName={`Dr. ${doctorInfo.name}`}>
+      {/* TOP TABS */}
+      <div className="mb-6 flex gap-3 border-b">
+        <button
+          onClick={() => setActiveTab("mypatients")}
+          className={`px-6 py-3 ${
+            activeTab === "mypatients"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-600"
+          }`}
+        >
+          My Patients
+        </button>
 
-  
+        <button
+          onClick={() => setActiveTab("allpatients")}
+          className={`px-6 py-3 ${
+            activeTab === "allpatients"
+              ? "border-b-2 border-blue-600 text-blue-600"
+              : "text-gray-600"
+          }`}
+        >
+          Search All Patients
+        </button>
+      </div>
 
-      {/* ======================================================
-          PATIENT LIST VIEW
-      ======================================================= */}
-      {!selectedPatient ? (
+      {/* ==================== MY PATIENTS ==================== */}
+      {activeTab === "mypatients" && !selectedPatient && (
         <Card title="My Patients" icon={Users}>
+          <input
+            className="border px-4 py-2 rounded mb-4 w-full"
+            placeholder="Search my patients..."
+            value={searchMy}
+            onChange={(e) => setSearchMy(e.target.value)}
+          />
 
-          {/* 🔍 ADDED SEARCH BAR */}
-          <div className="mb-4">
-            <input
-              type="text"
-              placeholder="Search patients..."
-              className="border px-4 py-2 rounded w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+          <Table
+            headers={["Patient ID", "Name", "City", "Actions"]}
+            data={filteredMyPatients}
+            renderRow={(p) => (
+              <tr key={p.patientId}>
+                <td className="px-6 py-3">{p.patientId}</td>
+                <td className="px-6 py-3">{p.name}</td>
+                <td className="px-6 py-3">{p.city}</td>
+                <td className="px-6 py-3">
+                  <Button onClick={() => handleViewPatient(p, true)}>
+                    View Records
+                  </Button>
+                </td>
+              </tr>
+            )}
+          />
+        </Card>
+      )}
+
+      {/* ==================== SEARCH ALL PATIENTS ==================== */}
+      {activeTab === "allpatients" && !selectedPatient && (
+        <Card title="Search All Patients" icon={Search}>
+          <input
+            className="border px-4 py-2 rounded mb-4 w-full"
+            placeholder="Search by ID, Name, City..."
+            value={searchAll}
+            onChange={(e) => setSearchAll(e.target.value)}
+          />
 
           {loading ? (
-            <p className="text-center text-gray-500 py-8">Loading patients...</p>
+            <p className="text-center py-4 text-gray-500">Loading patients...</p>
           ) : (
             <Table
-              headers={['Patient ID', 'Name', 'DOB', 'City', 'Actions']}
-              data={filteredPatients}
-              renderRow={(patient) => (
-                <tr key={patient.patientId}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {patient.patientId}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {patient.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {patient.dob}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {patient.city}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Button onClick={() => handleViewPatient(patient)} variant="primary">
-                      View Records
+              headers={["Patient ID", "Name", "City", "Actions"]}
+              data={filteredAllPatients}
+              renderRow={(p) => (
+                <tr key={p.patientId}>
+                  <td className="px-6 py-3">{p.patientId}</td>
+                  <td className="px-6 py-3">{p.name}</td>
+                  <td className="px-6 py-3">{p.city}</td>
+
+                  <td className="px-6 py-3 flex gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setRequestPatient(p);
+                        setShowRequestAccess(true);
+                      }}
+                      disabled={requestLoading}
+                    >
+                      {requestLoading ? (
+                        <div className="flex items-center gap-2 justify-center">
+                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                          Sending...
+                        </div>
+                      ) : (
+                        <>
+                          <KeyRound className="w-4 h-4 mr-1" />
+                          Request Access
+                        </>
+                      )}
                     </Button>
                   </td>
                 </tr>
@@ -191,51 +343,43 @@ const fetchDoctorInfo = async () => {
             />
           )}
         </Card>
-      ) : (
+      )}
 
-      /* ======================================================
-          PATIENT RECORDS VIEW
-      ======================================================= */
+      {/* ==================== PATIENT RECORDS ==================== */}
+      {selectedPatient && (
         <>
-          <div className="mb-4">
-            <Button onClick={() => setSelectedPatient(null)} variant="secondary">
-              ← Back to Patients
-            </Button>
-          </div>
-          
+          <Button variant="secondary" onClick={() => setSelectedPatient(null)}>
+            ← Back
+          </Button>
+
           <Card
             title={`Records for ${selectedPatient.name}`}
             icon={FileText}
             action={
               <Button onClick={() => setShowAddRecord(true)}>
-                <Upload className="w-4 h-4 inline mr-2" />
-                Add Record
+                <Upload className="w-4 h-4 mr-2" /> Add Record
               </Button>
             }
           >
             <Table
-              headers={['Record ID', 'Date', 'Diagnosis', 'Prescription', 'Report']}
+              headers={["ID", "Date", "Diagnosis", "Prescription", "Report"]}
               data={records}
-              renderRow={(record) => (
-                <tr key={record.recordId}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {record.recordId}
+              renderRow={(r) => (
+                <tr key={r.recordId}>
+                  <td className="px-6 py-3">{r.recordId}</td>
+                  <td className="px-6 py-3">
+                    {new Date(r.timestamp).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                    {new Date(record.timestamp).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{record.diagnosis}</td>
-                  <td className="px-6 py-4 text-sm text-gray-700">{record.prescription}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {record.reportHash && (
+                  <td className="px-6 py-3">{r.diagnosis}</td>
+                  <td className="px-6 py-3">{r.prescription}</td>
+                  <td className="px-6 py-3">
+                    {r.reportHash && (
                       <a
-                        href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
+                        href={`https://gateway.pinata.cloud/ipfs/${r.reportHash}`}
+                        className="text-blue-600 underline"
                         target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                       >
-                        <Eye className="w-4 h-4" />
-                        View
+                        <Eye className="inline w-4 h-4 mr-1" /> View
                       </a>
                     )}
                   </td>
@@ -243,49 +387,85 @@ const fetchDoctorInfo = async () => {
               )}
             />
           </Card>
-
-          {/* ADD RECORD MODAL */}
-          <Modal isOpen={showAddRecord} onClose={() => setShowAddRecord(false)} title="Add Medical Record">
-            <form onSubmit={handleAddRecord}>
-              <InputField
-                label="Diagnosis"
-                value={recordForm.diagnosis}
-                onChange={(e) => setRecordForm({ ...recordForm, diagnosis: e.target.value })}
-                placeholder="Patient diagnosis"
-                required
-              />
-              <InputField
-                label="Prescription"
-                value={recordForm.prescription}
-                onChange={(e) => setRecordForm({ ...recordForm, prescription: e.target.value })}
-                placeholder="Prescribed medications"
-                required
-              />
-              
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Medical Report <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="file"
-                  onChange={(e) => setRecordForm({ ...recordForm, file: e.target.files[0] })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Uploading...' : 'Add Record'}
-                </Button>
-                <Button type="button" variant="secondary" onClick={() => setShowAddRecord(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </Modal>
         </>
       )}
+
+      {/* ==================== REQUEST ACCESS MODAL ==================== */}
+      <Modal
+        isOpen={showRequestAccess}
+        onClose={() => setShowRequestAccess(false)}
+        title="Request Patient Access"
+      >
+        <p>
+          Requesting access to <b>{requestPatient?.name}</b>
+        </p>
+
+        <p className="text-sm mb-4">
+          Hospital: <b>{doctorInfo.hospitalName}</b> ({doctorInfo.hospitalId})
+        </p>
+
+        <Button
+          className="w-full"
+          onClick={sendAccessRequest}
+          disabled={requestLoading}
+        >
+          {requestLoading ? (
+            <div className="flex items-center gap-2 justify-center">
+              <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+              Sending...
+            </div>
+          ) : (
+            "Send Request"
+          )}
+        </Button>
+      </Modal>
+
+      {/* ==================== ADD RECORD MODAL ==================== */}
+      <Modal
+        isOpen={showAddRecord}
+        onClose={() => setShowAddRecord(false)}
+        title="Add Medical Record"
+      >
+        <form onSubmit={handleAddRecord}>
+          <InputField
+            label="Diagnosis"
+            value={recordForm.diagnosis}
+            onChange={(e) =>
+              setRecordForm({ ...recordForm, diagnosis: e.target.value })
+            }
+            required
+          />
+
+          <InputField
+            label="Prescription"
+            value={recordForm.prescription}
+            onChange={(e) =>
+              setRecordForm({ ...recordForm, prescription: e.target.value })
+            }
+            required
+          />
+
+          <input
+            type="file"
+            className="border px-3 py-2 rounded w-full mb-4"
+            onChange={(e) =>
+              setRecordForm({ ...recordForm, file: e.target.files[0] })
+            }
+            required
+          />
+
+          <Button type="submit" disabled={addRecordLoading}>
+            {addRecordLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                Uploading...
+              </div>
+            ) : (
+              "Add Record"
+            )}
+          </Button>
+        </form>
+      </Modal>
     </DashboardLayout>
   );
 };
