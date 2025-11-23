@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "axios";
+import api from "../context/api";
 import { Blocks, Hash } from "lucide-react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -21,7 +21,7 @@ const BlockchainExplorer = () => {
   const fetchBlockchainInfo = async () => {
     setLoading(true);
     try {
-      const res = await api.get("http://localhost:3000/getBlockchainInfo");
+      const res = await api.get("/getBlockchainInfo");
       if (res.data.success) {
         setInfo(res.data.blockchain);
       }

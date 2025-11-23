@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "axios";
+import api from "../context/api";
 import { toast } from "react-hot-toast";
 import { Users, FileText, Eye, Upload } from "lucide-react";
 
@@ -38,7 +38,7 @@ const DoctorDashboard = () => {
   const fetchPatients = async () => {
     setLoading(true);
     try {
-      const res = await api.post('http://localhost:3000/getPatientsForDoctor', { doctorId });
+      const res = await api.post('/getPatientsForDoctor', { doctorId });
 
       if (res.data.success) {
         setPatients(res.data.data || []);
@@ -54,7 +54,7 @@ const DoctorDashboard = () => {
   
   const fetchRecords = async (patientId) => {
     try {
-      const res = await api.post('http://localhost:3000/getAllRecordsByPatientId', {
+      const res = await api.post('/getAllRecordsByPatientId', {
         userId: doctorId,
         patientId
       });
@@ -88,7 +88,7 @@ const DoctorDashboard = () => {
     formData.append('report', recordForm.file);
     
     try {
-      const res = await api.post('http://localhost:3000/addRecord', formData, {
+      const res = await api.post('/addRecord', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       if (res.data.success) {
@@ -109,7 +109,7 @@ const [doctorDept, setDoctorDept] = useState("");
 
 const fetchDoctorInfo = async () => {
   try {
-    const res = await api.post("http://localhost:3000/getDoctorInfo", {
+    const res = await api.post("/getDoctorInfo", {
       userId: doctorId,
       doctorId: doctorId
     });

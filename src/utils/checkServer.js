@@ -1,8 +1,9 @@
+
 export async function checkServerStatus() {
     try {
       // Replace with your backend health endpoint
-      const res = await fetch("http://localhost:3000/status", { method: "GET" });
-  
+      const res = await fetch("https://alan-ungazetted-unshrewdly.ngrok-free.dev/status", { method: "GET" });
+      
       if (!res.ok) throw new Error("Server not available");
   
       return true; // server is UP
