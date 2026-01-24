@@ -52,7 +52,6 @@ const AllPatients = () => {
     setLoading(true);
     try {
       const res = await api.get("/getAllPatients");
-
       if (res.data.success) setPatients(res.data.data);
     } catch (err) {
       toast.error("Unable to load patients");
