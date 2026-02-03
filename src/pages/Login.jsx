@@ -98,19 +98,34 @@ useEffect(() => {
             placeholder="Enter your ID (e.g., HOSP-01, DOC-02)"
             required
           />
-          <Button type="submit" disabled={loading} fullWidth>
+          <Button type="submit" disabled={loading} fullWidth loading={loading}>
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
 
-        <div className="mt-6 text-sm text-gray-600">
-          <p className="font-medium mb-2">Sample IDs:</p>
-          <ul className="space-y-1 text-xs">
-            <li>• hospitalAdmin - Admin Portal</li>
-            <li>• HOSP-01 - Hospital Portal</li>
-            <li>• DOC-01 - Doctor Portal</li>
-            <li>• PAT-01 - Patient Portal</li>
-          </ul>
+        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-800">Sample Login IDs:</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2 text-xs">
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="font-mono">hospitalAdmin</span>
+              <span className="text-gray-600">Admin Portal</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="font-mono">HOSP-01</span>
+              <span className="text-gray-600">Hospital Portal</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="font-mono">DOC-0001</span>
+              <span className="text-gray-600">Doctor Portal</span>
+            </div>
+            <div className="flex justify-between items-center p-2 bg-white rounded">
+              <span className="font-mono">PAT-00000001</span>
+              <span className="text-gray-600">Patient Portal</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

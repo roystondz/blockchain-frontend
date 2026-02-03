@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { Hospital, Users, Blocks } from "lucide-react"; // ⭐ ADDED Blocks icon
+import { Hospital, Users, Blocks, Shield } from "lucide-react";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -134,6 +134,26 @@ useEffect(() => {
       {/* ⭐ TAB 1: DASHBOARD (STATS) */}
       {activeTab === "dashboard" && (
         <>
+          {/* Blockchain Trust Indicator */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Shield className="w-6 h-6 text-blue-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">Secured by Hyperledger Fabric</h3>
+                  <p className="text-sm text-gray-600">Enterprise-grade blockchain technology ensuring data integrity and trust</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate("/explorer")}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <Blocks className="w-4 h-4" />
+                Explore Ledger
+              </button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
             <Card title="Total Hospitals" icon={Hospital}>

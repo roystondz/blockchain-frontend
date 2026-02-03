@@ -225,6 +225,16 @@ const PatientDashboard = () => {
 
   return (
     <DashboardLayout role="patient" userName={profileForm.name}>
+      {/* Patient Trust Badge */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-green-600" />
+          <span className="text-sm font-medium text-green-800">
+            Your health data is protected by Hyperledger Fabric blockchain technology
+          </span>
+        </div>
+      </div>
+
       {/* TABS */}
       <div className="mb-6 flex gap-2 border-b">
         <button

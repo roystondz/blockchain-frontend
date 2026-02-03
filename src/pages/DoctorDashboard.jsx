@@ -8,6 +8,7 @@ import {
   Upload,
   KeyRound,
   Search,
+  Shield,
 } from "lucide-react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -240,6 +241,16 @@ const DoctorDashboard = () => {
 
   return (
     <DashboardLayout role="doctor" userName={`Dr. ${doctorInfo.name}`}>
+      {/* Blockchain Trust Badge */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-medium text-blue-800">
+            Medical records secured by Hyperledger Fabric blockchain
+          </span>
+        </div>
+      </div>
+
       {/* TOP TABS */}
       <div className="mb-6 flex gap-3 border-b">
         <button

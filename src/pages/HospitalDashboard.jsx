@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import { toast } from "react-hot-toast";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Shield } from "lucide-react";
 import api from "../context/api";
 import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
@@ -70,6 +70,16 @@ const HospitalDashboard = () => {
   
   return (
     <DashboardLayout role="hospital" userName="Hospital Admin">
+      {/* Hospital Trust Badge */}
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-6">
+        <div className="flex items-center gap-2">
+          <Shield className="w-5 h-5 text-purple-600" />
+          <span className="text-sm font-medium text-purple-800">
+            Hospital operations secured by Hyperledger Fabric blockchain
+          </span>
+        </div>
+      </div>
+
       <div className="mb-6">
         <div className="flex gap-2 border-b">
           <button
