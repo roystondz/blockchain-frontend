@@ -17,6 +17,9 @@ import Button from "../components/Button";
 import Table from "../components/Table";
 import Modal from "../components/Modal";
 import InputField from "../components/InputField";
+import DataTable from "../components/DataTable";
+import { ProfessionalCard } from "../components/ProfessionalCard";
+import { CircularProgress, StatusIndicator } from "../components/Progress";
 
 const DoctorDashboard = () => {
   const doctorId = localStorage.getItem("userId");
@@ -34,8 +37,6 @@ const DoctorDashboard = () => {
   const [showRequestAccess, setShowRequestAccess] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [searchAll, setSearchAll] = useState("");
-  const [searchMy, setSearchMy] = useState("");
 
   const [doctorInfo, setDoctorInfo] = useState({
     name: "",
@@ -229,15 +230,7 @@ const DoctorDashboard = () => {
   // -----------------------------------
   const myPatientIds = new Set(myPatients.map((p) => p.patientId));
 
-  const filteredMyPatients = myPatients.filter((p) =>
-    Object.values(p).join(" ").toLowerCase().includes(searchMy.toLowerCase())
-  );
-
-  const filteredAllPatients = allPatients
-    .filter((p) => !myPatientIds.has(p.patientId)) // hide patients already accessed
-    .filter((p) =>
-      Object.values(p).join(" ").toLowerCase().includes(searchAll.toLowerCase())
-    );
+  const filteredAllPatients = allPatients.filter((p) => !myPatientIds.has(p.patientId));
 
   return (
     <DashboardLayout role="doctor" userName={`Dr. ${doctorInfo.name}`}>
@@ -278,82 +271,130 @@ const DoctorDashboard = () => {
 
       {/* ==================== MY PATIENTS ==================== */}
       {activeTab === "mypatients" && !selectedPatient && (
-        <Card title="My Patients" icon={Users}>
-          <input
-            className="border px-4 py-2 rounded mb-4 w-full"
-            placeholder="Search my patients..."
-            value={searchMy}
-            onChange={(e) => setSearchMy(e.target.value)}
-          />
-
-          <Table
-            headers={["Patient ID", "Name", "City", "Actions"]}
-            data={filteredMyPatients}
-            renderRow={(p) => (
-              <tr key={p.patientId}>
-                <td className="px-6 py-3">{p.patientId}</td>
-                <td className="px-6 py-3">{p.name}</td>
-                <td className="px-6 py-3">{p.city}</td>
-                <td className="px-6 py-3">
-                  <Button onClick={() => handleViewPatient(p, true)}>
+        <ProfessionalCard 
+          title="My Patients" 
+          icon={Users}
+          badge={{ text: `${myPatients.length} patients`, type: 'info' }}
+        >
+          <DataTable
+            data={myPatients}
+            columns={[
+              {
+                header: "Patient ID",
+                accessor: "patientId",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "Name",
+                accessor: "name",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "City",
+                accessor: "city",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "Status",
+                accessor: "status",
+                type: "status",
+                render: (value) => (
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    value === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {value || 'Active'}
+                  </span>
+                )
+              },
+              {
+                header: "Actions",
+                accessor: "actions",
+                render: (_, row) => (
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleViewPatient(row, true)}
+                    loading={loading}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
                     View Records
                   </Button>
-                </td>
-              </tr>
-            )}
+                )
+              }
+            ]}
+            searchable={true}
+            filterable={true}
+            exportable={true}
+            loading={loading}
+            pagination={true}
           />
-        </Card>
+        </ProfessionalCard>
       )}
 
       {/* ==================== SEARCH ALL PATIENTS ==================== */}
       {activeTab === "allpatients" && !selectedPatient && (
-        <Card title="Search All Patients" icon={Search}>
-          <input
-            className="border px-4 py-2 rounded mb-4 w-full"
-            placeholder="Search by ID, Name, City..."
-            value={searchAll}
-            onChange={(e) => setSearchAll(e.target.value)}
-          />
-
-          {loading ? (
-            <p className="text-center py-4 text-gray-500">Loading patients...</p>
-          ) : (
-            <Table
-              headers={["Patient ID", "Name", "City", "Actions"]}
-              data={filteredAllPatients}
-              renderRow={(p) => (
-                <tr key={p.patientId}>
-                  <td className="px-6 py-3">{p.patientId}</td>
-                  <td className="px-6 py-3">{p.name}</td>
-                  <td className="px-6 py-3">{p.city}</td>
-
-                  <td className="px-6 py-3 flex gap-2">
-                    <Button
+        <ProfessionalCard 
+          title="Search All Patients" 
+          icon={Search}
+          badge={{ text: `${filteredAllPatients.length} available`, type: 'info' }}
+        >
+          <DataTable
+            data={filteredAllPatients}
+            columns={[
+              {
+                header: "Patient ID",
+                accessor: "patientId",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "Name",
+                accessor: "name",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "City",
+                accessor: "city",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "Hospital",
+                accessor: "hospitalName",
+                sortable: true,
+                filterable: true
+              },
+              {
+                header: "Actions",
+                accessor: "actions",
+                render: (_, row) => (
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
                       variant="secondary"
                       onClick={() => {
-                        setRequestPatient(p);
+                        setRequestPatient(row);
                         setShowRequestAccess(true);
                       }}
-                      disabled={requestLoading}
+                      loading={requestLoading}
                     >
-                      {requestLoading ? (
-                        <div className="flex items-center gap-2 justify-center">
-                          <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                          Sending...
-                        </div>
-                      ) : (
-                        <>
-                          <KeyRound className="w-4 h-4 mr-1" />
-                          Request Access
-                        </>
-                      )}
+                      <KeyRound className="w-4 h-4 mr-1" />
+                      Request Access
                     </Button>
-                  </td>
-                </tr>
-              )}
-            />
-          )}
-        </Card>
+                  </div>
+                )
+              }
+            ]}
+            searchable={true}
+            filterable={true}
+            exportable={true}
+            loading={loading}
+            pagination={true}
+          />
+        </ProfessionalCard>
       )}
 
       {/* ==================== PATIENT RECORDS ==================== */}

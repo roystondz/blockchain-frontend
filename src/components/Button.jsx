@@ -1,8 +1,14 @@
 import React from "react";
 
 
-const Button = ({ children, onClick, variant = 'primary', type = 'button', disabled = false, fullWidth = false, loading = false }) => {
-  const baseClasses = "px-6 py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed relative";
+const Button = ({ children, onClick, variant = 'primary', type = 'button', disabled = false, fullWidth = false, loading = false, size = 'md' }) => {
+  const sizeClasses = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-6 py-2",
+    lg: "px-8 py-3 text-lg"
+  };
+  
+  const baseClasses = `rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed relative ${sizeClasses[size]}`;
   const variants = {
     primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md",
     secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
