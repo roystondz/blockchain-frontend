@@ -208,7 +208,7 @@ const ActivityCard = ({
           activities.slice(0, maxItems).map((activity, index) => (
             <div key={index} className="flex items-start gap-3">
               <div className={`
-                w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0
+                w-8 h-8 rounded-full flex items-center justify-center shrink-0
                 ${activity.type === 'success' ? 'bg-green-100 text-green-600' :
                   activity.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
                   activity.type === 'error' ? 'bg-red-100 text-red-600' :

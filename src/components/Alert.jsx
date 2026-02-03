@@ -46,7 +46,7 @@ const Alert = ({ type = "info", title, children, dismissible = false, onDismiss 
   return (
     <div className={`rounded-lg border ${config.bgColor} ${config.borderColor} p-4 relative`}>
       <div className="flex">
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <Icon className={`h-5 w-5 ${config.iconColor}`} />
         </div>
         <div className="ml-3 flex-1">

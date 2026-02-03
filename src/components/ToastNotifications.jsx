@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Info, X, AlertTriangle } from 'lucide-react';
 
 const Toast = ({ type = 'info', message, duration = 5000, action, onClose, persistent = false }) => {

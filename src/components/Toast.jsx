@@ -55,7 +55,7 @@ const Toast = ({ type = 'info', message, onClose, duration = 5000, action }) => 
       `}
     >
       <div className={getStyles()}>
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <Icon className="w-5 h-5" />
         </div>
         <div className="ml-3 flex-1">
@@ -69,7 +69,7 @@ const Toast = ({ type = 'info', message, onClose, duration = 5000, action }) => 
             </button>
           )}
         </div>
-        <div className="ml-4 flex-shrink-0">
+        <div className="ml-4 shrink-0">
           <button
             onClick={handleClose}
             className="inline-flex text-gray-400 hover:text-gray-600 transition-colors"
