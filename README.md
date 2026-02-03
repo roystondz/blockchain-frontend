@@ -257,7 +257,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support and questions:
-- **Email**: support@ehr-system.com
+- **Email**: roystonad2004@gmail.com
 - **Documentation**: [Wiki](https://github.com/roystondz/blockchain-frontend/wiki)
 - **Issues**: [GitHub Issues](https://github.com/roystondz/blockchain-frontend/issues)
 
