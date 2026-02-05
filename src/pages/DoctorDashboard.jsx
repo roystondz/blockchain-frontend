@@ -361,12 +361,12 @@ const DoctorDashboard = () => {
                 sortable: true,
                 filterable: true
               },
-              {
-                header: "Hospital",
-                accessor: "hospitalName",
-                sortable: true,
-                filterable: true
-              },
+              // {
+              //   header: "Hospital",
+              //   accessor: "hospitalName",
+              //   sortable: true,
+              //   filterable: true
+              // },
               {
                 header: "Actions",
                 accessor: "actions",
