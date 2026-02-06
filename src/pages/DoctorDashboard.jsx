@@ -631,26 +631,69 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
               >
                 {records.length > 0 ? (
                   <Table
-                    headers={["Record ID", "Date", "Diagnosis", "Prescription", "Report Hash"]}
+                    headers={["Record ID", "Date", "Type", "Diagnosis", "Prescription", "Prescribed By", "Report"]}
                     data={records}
                     renderRow={(record) => (
                       <tr key={record.recordId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 font-mono text-sm">{record.recordId}</td>
                         <td className="px-6 py-4">
-                          {new Date(record.timestamp).toLocaleDateString()}
+                          <div className="text-sm">
+                            {new Date(record.timestamp).toLocaleDateString()}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(record.timestamp).toLocaleTimeString()}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            record.reportHash 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {record.reportHash ? 'Digital Report' : 'Text Entry'}
+                          </span>
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                             {record.diagnosis}
                           </span>
                         </td>
-                        <td className="px-6 py-4">{record.prescription}</td>
+                        <td className="px-6 py-4">
+                          <div className="max-w-xs truncate text-sm" title={record.prescription}>
+                            {record.prescription}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-blue-600 font-bold text-xs">
+                                {record.doctorName?.charAt(0) || 'D'}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {record.doctorName || 'Unknown Doctor'}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {record.doctorId || 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
                         <td className="px-6 py-4">
                           {record.reportHash && (
-                            <div className="flex items-center gap-2">
-                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-gray-600">Verified</span>
-                            </div>
+                            <a
+                              href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-sm font-medium transition-colors duration-200"
+                            >
+                              <FileText className="w-4 h-4" />
+                              <span>View Report</span>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </a>
                           )}
                         </td>
                       </tr>
@@ -781,24 +824,68 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
             }
           >
             <Table
-              headers={["ID", "Date", "Diagnosis", "Prescription", "Report"]}
+              headers={["ID", "Date", "Type", "Diagnosis", "Prescription", "Prescribed By", "Report"]}
               data={records}
               renderRow={(r) => (
                 <tr key={r.recordId}>
-                  <td className="px-6 py-3">{r.recordId}</td>
+                  <td className="px-6 py-3 font-mono text-sm">{r.recordId}</td>
                   <td className="px-6 py-3">
-                    {new Date(r.timestamp).toLocaleDateString()}
+                    <div className="text-sm">
+                      {new Date(r.timestamp).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {new Date(r.timestamp).toLocaleTimeString()}
+                    </div>
                   </td>
-                  <td className="px-6 py-3">{r.diagnosis}</td>
-                  <td className="px-6 py-3">{r.prescription}</td>
+                  <td className="px-6 py-3">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      r.reportHash 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {r.reportHash ? 'Digital Report' : 'Text Entry'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3">
+                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                      {r.diagnosis}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="max-w-xs truncate text-sm" title={r.prescription}>
+                      {r.prescription}
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-bold text-xs">
+                          {r.doctorName?.charAt(0) || 'D'}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {r.doctorName || 'Unknown Doctor'}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {r.doctorId || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
                   <td className="px-6 py-3">
                     {r.reportHash && (
                       <a
                         href={`https://gateway.pinata.cloud/ipfs/${r.reportHash}`}
-                        className="text-blue-600 underline"
                         target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-sm font-medium transition-colors duration-200"
                       >
-                        <Eye className="inline w-4 h-4 mr-1" /> View
+                        <FileText className="w-4 h-4" />
+                        <span>View Report</span>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
                       </a>
                     )}
                   </td>
