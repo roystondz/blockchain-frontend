@@ -37,6 +37,10 @@ useEffect(() => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [emergencyRequests, setEmergencyRequests] = useState([]);
+  const [emergencyLoading, setEmergencyLoading] = useState(false);
+  const [processingRequest, setProcessingRequest] = useState(null);
+  const adminId = localStorage.getItem("userId") || "";
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -58,6 +62,49 @@ useEffect(() => {
       setStatsLoading(false);
     }
   };
+
+  // Admin -> Fetch pending emergency requests
+const fetchEmergencyRequests = async () => {
+  setEmergencyLoading(true);
+  try {
+    const res = await api.post("/admin/emergency/requests", { adminId: "HOSP-01" });
+    if (res.data.success) {
+      let data = res.data.data;
+      if (typeof data === "string") data = JSON.parse(data);
+      if (!Array.isArray(data)) data = [];
+      setEmergencyRequests(data);
+    }
+  } catch (error) {
+    console.error("Failed to fetch emergency requests:", error);
+    toast.error("Failed to load emergency requests");
+  } finally {
+    setEmergencyLoading(false);
+  }
+};
+
+// Admin -> Approve or Reject
+const decideEmergencyRequest = async (requestId, action) => {
+  setProcessingRequest(requestId);
+  try {
+    const res = await api.post("/admin/emergency/decision", {
+      adminId: "HOSP-01",
+      requestId,
+      action   // APPROVE or REJECT
+    });
+    
+    if (res.data.success) {
+      toast.success(`Request ${action.toLowerCase()}ed successfully!`);
+      fetchEmergencyRequests(); // refresh list
+    } else {
+      toast.error(res.data.message || `Failed to ${action.toLowerCase()} request`);
+    }
+  } catch (error) {
+    console.error(`Failed to ${action.toLowerCase()} emergency request:`, error);
+    toast.error(`Failed to ${action.toLowerCase()} request`);
+  } finally {
+    setProcessingRequest(null);
+  }
+};
 
   const handleRegisterHospital = async (e) => {
     e.preventDefault();
@@ -119,6 +166,21 @@ useEffect(() => {
             }`}
           >
             Register Hospital
+          </button>
+
+          {/* Emergency Requests Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("emergency");
+              fetchEmergencyRequests();
+            }}
+            className={`px-6 py-3 font-medium ${
+              activeTab === "emergency"
+                ? "border-b-2 border-blue-600 text-blue-600"
+                : "text-gray-600"
+            }`}
+          >
+            Emergency Requests
           </button>
 
           {/* ⭐ Blockchain Explorer Tab */}
@@ -375,6 +437,129 @@ useEffect(() => {
             </div>
 
           </form>
+        </Card>
+      )}
+
+      {/* ⭐ TAB 3: EMERGENCY REQUESTS */}
+      {activeTab === "emergency" && (
+        <Card title="Emergency Access Requests" icon={Shield}>
+          {emergencyLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+              <span className="ml-3 text-gray-600">Loading emergency requests...</span>
+            </div>
+          ) : emergencyRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No emergency access requests at this time.</p>
+              <p className="text-sm text-gray-500 mt-2">Doctors will appear here when they request emergency access to patient records.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {emergencyRequests.map((request, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                          <span className="text-blue-600 font-semibold text-sm">
+                            {request.doctorName?.charAt(0) || 'D'}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">Dr. {request.doctorName || 'Unknown'}</h4>
+                          <p className="text-sm text-gray-600">ID: {request.doctorId || 'N/A'}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Patient:</span>
+                          <p className="font-medium text-gray-900">{request.patientName || 'Unknown'}</p>
+                          <p className="text-gray-600">{request.patientId || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Hospital:</span>
+                          <p className="font-medium text-gray-900">{request.hospitalName || 'Unknown'}</p>
+                          <p className="text-gray-600">{request.hospitalId || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Requested:</span>
+                          <p className="font-medium text-gray-900">
+                            {new Date(request.requestTime || Date.now()).toLocaleString()}
+                          </p>
+                          <p className="text-gray-600">
+                            {Math.floor((Date.now() - new Date(request.requestTime || Date.now())) / (1000 * 60 * 60))} hours ago
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {request.reason && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                          <p className="text-sm font-medium text-yellow-800">Reason for Emergency Access:</p>
+                          <p className="text-sm text-yellow-700 mt-1">{request.reason}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 ml-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        request.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {request.status || 'pending'}
+                      </span>
+                      
+                      {request.status === 'PENDING' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => decideEmergencyRequest(request.requestId || index, 'APPROVE')}
+                            disabled={processingRequest === (request.requestId || index)}
+                            className="px-3 py-1 bg-green-600 text-white text-xs rounded-full hover:bg-green-700 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {processingRequest === (request.requestId || index) ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Approve
+                              </>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => decideEmergencyRequest(request.requestId || index, 'REJECT')}
+                            disabled={processingRequest === (request.requestId || index)}
+                            className="px-3 py-1 bg-red-600 text-white text-xs rounded-full hover:bg-red-700 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {processingRequest === (request.requestId || index) ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Processing...
+                              </>
+                            ) : (
+                              <>
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Reject
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 

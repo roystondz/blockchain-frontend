@@ -7,6 +7,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import Card from "../components/Card";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
+import { SelectField, Toggle } from "../components/FormComponents";
 
 
 const HospitalDashboard = () => {
@@ -26,7 +27,9 @@ const HospitalDashboard = () => {
     name: '',
     dob: '',
     city: '',
-    mobile:''
+    mobile:'',
+    gender:'',
+    breakGlassConsent:''
   });
   const [loading, setLoading] = useState(false);
   
@@ -57,7 +60,7 @@ const HospitalDashboard = () => {
       const res = await api.post('/registerPatient', patientForm);
       if (res.data.success) {
         toast.success('Patient registered successfully!');
-        setPatientForm({ ...patientForm, patientId: '', name: '', dob: '' });
+        setPatientForm({ ...patientForm, patientId: '', name: '', dob: '', city: '', mobile:'', gender:'', breakGlassConsent:'' });
       } else {
         toast.error(res.data.message || 'Registration failed');
       }
@@ -192,6 +195,24 @@ const HospitalDashboard = () => {
                 placeholder="New York"
                 required
               />
+              <SelectField
+                label="Gender"
+                value={patientForm.gender}
+                onChange={(e) => setPatientForm({ ...patientForm, gender: e.target.value })}
+                options={[
+                  { value: 'Male', label: 'Male' },
+                  { value: 'Female', label: 'Female' }
+                ]}
+                required
+              />
+              <Toggle
+                label="Emergency Priority Access"
+                checked={patientForm.breakGlassConsent}
+                onChange={(value) => setPatientForm({ ...patientForm, breakGlassConsent: value })}
+                helperText="Enable emergency access for critical situations"
+              />
+              
+
             </div>
             <div className="mt-4">
               <Button type="submit" disabled={loading}>

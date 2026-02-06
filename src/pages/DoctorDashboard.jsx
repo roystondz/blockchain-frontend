@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../context/api";
 import { toast } from "react-hot-toast";
 import {
@@ -9,6 +9,7 @@ import {
   KeyRound,
   Search,
   Shield,
+  AlertCircle,
 } from "lucide-react";
 
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -25,6 +26,7 @@ const DoctorDashboard = () => {
   const doctorId = localStorage.getItem("userId");
 
   const [activeTab, setActiveTab] = useState("mypatients");
+const [emergencyPatient, setEmergencyPatient] = useState(null);
 
   const [myPatients, setMyPatients] = useState([]);
   const [allPatients, setAllPatients] = useState([]);
@@ -35,6 +37,9 @@ const DoctorDashboard = () => {
   const [records, setRecords] = useState([]);
   const [showAddRecord, setShowAddRecord] = useState(false);
   const [showRequestAccess, setShowRequestAccess] = useState(false);
+
+  const [emergencyPatientId, setEmergencyPatientId] = useState(null);
+  const [selectedEmergencyPatient, setSelectedEmergencyPatient] = useState(null);
 
   const [loading, setLoading] = useState(false);
 
@@ -55,16 +60,42 @@ const DoctorDashboard = () => {
     file: null,
   });
 
-  useEffect(() => {
-    fetchDoctorInfo();
-    fetchMyPatients();
-    fetchAllPatients();
-  }, []);
+  // -----------------------------------
+  // FETCH MY EMERGENCY ACCESS
+  // -----------------------------------
+  const fetchMyEmergencyAccess = useCallback(async () => {
+    try {
+      const res = await api.get("/doctor/emergency/my-access", {
+        params: { doctorId }
+      });
+
+      console.log("Emergency access API response:", res.data);
+
+      if (res.data.success && res.data.data.length > 0) {
+        const access = res.data.data[0]; // assuming one active emergency
+
+        console.log("Emergency access received:", access);
+
+        setEmergencyPatientId(access.patientId); // 🔑 THIS IS THE KEY
+        console.log("Set emergencyPatientId to:", access.patientId);
+        
+        toast.success("Emergency access approved");
+      } else {
+        console.log("No emergency access found");
+        setEmergencyPatient(null);
+      }
+    } catch (err) {
+      console.error("Error fetching emergency access:", err);
+      setEmergencyPatient(null);
+    }
+  }, [doctorId]);
 
   // -----------------------------------
   // GET DOCTOR INFO
   // -----------------------------------
-  const fetchDoctorInfo = async () => {
+
+
+  const fetchDoctorInfo = useCallback(async () => {
     try {
       const res = await api.post("/getDoctorInfo", {
         doctorId,
@@ -83,12 +114,12 @@ const DoctorDashboard = () => {
     } catch {
       toast.error("Failed loading doctor info");
     }
-  };
+  }, [doctorId]);
 
   // -----------------------------------
   // FETCH MY PATIENTS
   // -----------------------------------
-  const fetchMyPatients = async () => {
+  const fetchMyPatients = useCallback(async () => {
     try {
       const res = await api.post("/getPatientsForDoctor", { doctorId });
 
@@ -100,12 +131,12 @@ const DoctorDashboard = () => {
     } catch {
       toast.error("Unable to load your patients");
     }
-  };
+  }, [doctorId]);
 
   // -----------------------------------
   // FETCH ALL PATIENTS
   // -----------------------------------
-  const fetchAllPatients = async () => {
+  const fetchAllPatients = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get("/getAllPatients");
@@ -120,14 +151,41 @@ const DoctorDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDoctorInfo();
+    fetchMyPatients();
+    fetchAllPatients();
+    fetchMyEmergencyAccess();
+    //checkEmergencyAccess();
+  }, [fetchDoctorInfo, fetchMyPatients, fetchAllPatients, fetchMyEmergencyAccess]);
+
+  // Re-fetch emergency access when allPatients is loaded
+  useEffect(() => {
+    console.log("Emergency patient check - allPatients.length:", allPatients.length);
+    console.log("Emergency patient check - emergencyPatientId:", emergencyPatientId);
+    console.log("Available patient IDs:", allPatients.map(p => p.patientId));
+    
+    if (allPatients.length > 0 && emergencyPatientId) {
+      // Find the complete patient object from allPatients
+      const patient = allPatients.find(p => p.patientId === emergencyPatientId);
+      if (patient) {
+        setEmergencyPatient(patient);
+        console.log("Emergency patient found and set:", patient);
+      } else {
+        console.error("Patient not found in allPatients list for ID:", emergencyPatientId);
+        console.error("Available IDs:", allPatients.map(p => p.patientId));
+      }
+    }
+  }, [allPatients, emergencyPatientId]);
 
   // -----------------------------------
   // VIEW PATIENT RECORDS (My Patients → Always allowed)
   // -----------------------------------
-  const handleViewPatient = async (patient, fromMyPatients = false) => {
+  const handleViewPatient = async (patient, fromMyPatients = false, isEmergencyAccess = false) => {
     try {
-      if (fromMyPatients) {
+      if (fromMyPatients || isEmergencyAccess) {
         setSelectedPatient(patient);
         fetchRecords(patient.patientId);
         return;
@@ -153,7 +211,7 @@ const DoctorDashboard = () => {
   // -----------------------------------
   // FETCH RECORDS
   // -----------------------------------
-  const fetchRecords = async (patientId) => {
+  const fetchRecords = useCallback(async (patientId) => {
     try {
       const res = await api.post("/getAllRecordsByPatientId", {
         userId: doctorId,
@@ -168,7 +226,7 @@ const DoctorDashboard = () => {
     } catch {
       toast.error("Could not load records");
     }
-  };
+  }, [doctorId]);
 
   // -----------------------------------
   // SEND ACCESS REQUEST (with loading)
@@ -232,6 +290,77 @@ const DoctorDashboard = () => {
 
   const filteredAllPatients = allPatients.filter((p) => !myPatientIds.has(p.patientId));
 
+
+  // // Doctor -> Check if access is approved
+  // const checkEmergencyAccess = useCallback(async () => {
+  //   if (!patientId) {
+  //     console.log("No patientId, skipping check");
+  //     return;
+  //   }
+    
+  //   console.log("Checking emergency access for patient:", patientId);
+  //   console.log("Request patient:", requestPatient);
+  //   console.log("All patients:", allPatients);
+  //   console.log("All patients length:", allPatients.length);
+    
+  //   // Find patient from allPatients if requestPatient is null
+  //   const patient = requestPatient || allPatients.find(p => p.patientId === patientId);
+  //   console.log("Found patient:", patient);
+  //   console.log("Patient search result:", allPatients.find(p => p.patientId === patientId));
+    
+  //   try {
+  //     const res = await api.post("/doctor/emergency/check", {
+  //       doctorId,
+  //       patientId
+  //     });
+
+  //     console.log("API Response:", res.data);
+
+  //     if (res.data.success && res.data.access && res.data.access.access === true) {
+  //       console.log("Access approved! Setting emergency patient");
+  //       console.log("Patient to set:", patient);
+  //       setCanView(true);
+  //       setEmergencyPatient(patient); // Use the found patient
+  //       console.log("Called setEmergencyPatient with:", patient);
+  //       toast.success("Emergency access approved! Check the Emergency Patient tab.");
+  //       // Auto-navigate to emergency patient tab after 2 seconds
+  //       setTimeout(() => {
+  //         console.log("Auto-navigating to emergency patient tab");
+  //         setActiveTab("emergency-patient");
+  //         if (patient && patient.patientId) {
+  //           console.log("Fetching records for patient:", patient.patientId);
+  //           fetchRecords(patient.patientId);
+  //         } else {
+  //           console.log("No patient data available for fetchRecords");
+  //         }
+  //       }, 2000);
+  //     } else {
+  //       console.log("Access not approved, continuing poll");
+  //       setCanView(false);
+  //       // Continue polling every 3 seconds if still pending
+  //       setTimeout(() => checkEmergencyAccess(), 3000);
+  //     }
+  //   } catch (error) {
+  //     console.error("Check emergency access error:", error);
+  //     setCanView(false);
+  //   }
+  // }, [patientId, requestPatient, allPatients, doctorId, fetchRecords]);
+
+  // // Auto-check emergency access when emergency-patient tab is opened
+  // useEffect(() => {
+  //   if (activeTab === "emergency-patient" && patientId && !emergencyPatient) {
+  //     console.log("Emergency patient tab opened, but waiting for manual check");
+  //     // Don't auto-check, wait for user to click "Check Access Status"
+  //   }
+  // }, [activeTab, patientId, emergencyPatient, checkEmergencyAccess]);
+
+  useEffect(() => {
+  if (emergencyPatientId) {
+    console.log("Fetching records for:", emergencyPatientId);
+    fetchRecords(emergencyPatientId);
+  }
+}, [emergencyPatientId, fetchRecords]);
+
   return (
     <DashboardLayout role="doctor" userName={`Dr. ${doctorInfo.name}`}>
       {/* Blockchain Trust Badge */}
@@ -266,6 +395,25 @@ const DoctorDashboard = () => {
           }`}
         >
           Search All Patients
+        </button>
+
+        <button
+          onClick={() => setActiveTab("emergency-patient")}
+          className={`px-6 py-3 ${
+            activeTab === "emergency-patient"
+              ? "border-b-2 border-green-600 text-green-600"
+              : "text-gray-600"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            Emergency Patient
+            {emergencyPatient && (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                {emergencyPatient.name?.charAt(0) || 'P'}
+              </span>
+            )}
+          </div>
         </button>
       </div>
 
@@ -384,6 +532,17 @@ const DoctorDashboard = () => {
                       <KeyRound className="w-4 h-4 mr-1" />
                       Request Access
                     </Button>
+                    <Button 
+                      size="sm" 
+                      variant="danger"
+                      onClick={() => {
+                        setEmergencyPatient(row);
+                        setActiveTab("emergency-patient");
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-1" />
+                      Emergency
+                    </Button>
                   </div>
                 )
               }
@@ -395,6 +554,214 @@ const DoctorDashboard = () => {
             pagination={true}
           />
         </ProfessionalCard>
+      )}
+
+      {/* ==================== EMERGENCY PATIENT RECORDS ==================== */}
+      {activeTab === "emergency-patient" && (
+        <div className="space-y-6">
+          {selectedEmergencyPatient ? (
+            <>
+              {/* Emergency Patient Header */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-green-800">Emergency Patient Access</h2>
+                      <p className="text-sm text-green-700">Temporary access granted for critical care</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      setSelectedEmergencyPatient(null);
+                      setRecords([]);
+                    }}
+                  >
+                    ← Back to Emergency List
+                  </Button>
+                </div>
+              </div>
+
+              {/* Patient Information Card */}
+              <ProfessionalCard 
+                title="Patient Information" 
+                icon={Users}
+                badge={{ text: "Emergency Access", type: 'success' }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-bold text-lg">
+                          {selectedEmergencyPatient.name?.charAt(0) || 'P'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-500">Patient Name</p>
+                        <p className="font-semibold text-gray-900">{selectedEmergencyPatient.name}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">Patient ID</p>
+                    <p className="font-mono font-semibold text-gray-900">{selectedEmergencyPatient.patientId}</p>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">Age</p>
+                    <p className="font-semibold text-gray-900">{selectedEmergencyPatient.age} years</p>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-500 mb-1">Blood Type</p>
+                    <p className="font-semibold text-red-600">{selectedEmergencyPatient.bloodType}</p>
+                  </div>
+                </div>
+              </ProfessionalCard>
+
+              {/* Medical Records */}
+              <Card
+                title="Medical Records"
+                icon={FileText}
+                badge={{ text: `${records.length} records`, type: 'info' }}
+              >
+                {records.length > 0 ? (
+                  <Table
+                    headers={["Record ID", "Date", "Diagnosis", "Prescription", "Report Hash"]}
+                    data={records}
+                    renderRow={(record) => (
+                      <tr key={record.recordId} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 font-mono text-sm">{record.recordId}</td>
+                        <td className="px-6 py-4">
+                          {new Date(record.timestamp).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                            {record.diagnosis}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">{record.prescription}</td>
+                        <td className="px-6 py-4">
+                          {record.reportHash && (
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-gray-600">Verified</span>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No medical records found for this patient</p>
+                    <p className="text-sm text-gray-500 mt-2">Records may not have been added yet</p>
+                  </div>
+                )}
+              </Card>
+
+              {/* Emergency Actions */}
+              <ProfessionalCard 
+                title="Emergency Actions" 
+                icon={Shield}
+                badge={{ text: "Critical Care", type: 'danger' }}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Button className="flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4" />
+                    Add Critical Record
+                  </Button>
+                  <Button variant="secondary" className="flex items-center justify-center gap-2">
+                    <Eye className="w-4 h-4" />
+                    Full Medical History
+                  </Button>
+                  <Button variant="secondary" className="flex items-center justify-center gap-2">
+                    <Shield className="w-4 h-4" />
+                    Emergency Contact
+                  </Button>
+                </div>
+              </ProfessionalCard>
+            </>
+          ) : (
+            /* Emergency Patient List */
+            <ProfessionalCard 
+              title="Emergency Patients" 
+              icon={Shield}
+              badge={{ text: "Critical Access", type: 'danger' }}
+            >
+              {emergencyPatient ? (
+                <DataTable
+                  data={[emergencyPatient]}
+                  columns={[
+                    {
+                      header: "Patient ID",
+                      accessor: "patientId",
+                      sortable: true,
+                      filterable: true
+                    },
+                    {
+                      header: "Name",
+                      accessor: "name",
+                      sortable: true,
+                      filterable: true
+                    },
+                    {
+                      header: "Age",
+                      accessor: "age",
+                      sortable: true
+                    },
+                    {
+                      header: "Blood Type",
+                      accessor: "bloodType",
+                      sortable: true
+                    },
+                    {
+                      header: "City",
+                      accessor: "city",
+                      sortable: true,
+                      filterable: true
+                    },
+                    {
+                      header: "Actions",
+                      accessor: "actions",
+                      render: (_, row) => (
+                        <Button 
+                          size="sm" 
+                          variant="danger"
+                          onClick={() => {
+                            setSelectedEmergencyPatient(row);
+                            fetchRecords(row.patientId);
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          View Records
+                        </Button>
+                      )
+                    }
+                  ]}
+                  searchable={true}
+                  filterable={true}
+                  exportable={true}
+                  loading={loading}
+                  pagination={false}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Emergency Patients</h3>
+                  <p className="text-gray-600 mb-6">
+                    Click the Emergency button in Search All Patients to add emergency access.
+                  </p>
+                </div>
+              )}
+            </ProfessionalCard>
+          )}
+        </div>
       )}
 
       {/* ==================== PATIENT RECORDS ==================== */}

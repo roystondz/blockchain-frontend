@@ -8,6 +8,7 @@ import Table from "../components/Table";
 import Modal from "../components/Modal";
 import InputField from "../components/InputField";
 import Button from "../components/Button";
+import { Toggle } from "../components/FormComponents";
 
 const PatientDashboard = () => {
   const [showReport, setShowReport] = useState(false);
@@ -28,7 +29,8 @@ const PatientDashboard = () => {
   const [profileForm, setProfileForm] = useState({
     name: "",
     dob: "",
-    city: ""
+    city: "",
+    breakGlassConsent: false
   });
 
   const [loading, setLoading] = useState(false);
@@ -60,11 +62,13 @@ const PatientDashboard = () => {
       setProfileForm({
         name: data.name || "",
         dob: data.dob || "",
-        city: data.city || ""
+        city: data.city || "",
+        breakGlassConsent: data.breakGlassConsent || false
       });
 
     } catch (error) {
       toast.error("Failed to load profile");
+      console.log(error); 
     }
   };
 
@@ -455,6 +459,45 @@ const PatientDashboard = () => {
             }
             required
           />
+
+          {/* Test with simple checkbox */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Emergency Priority Access (Test Checkbox)
+            </label>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                checked={profileForm.breakGlassConsent}
+                onChange={(e) => {
+                  console.log('Checkbox changed from', profileForm.breakGlassConsent, 'to', e.target.checked);
+                  setProfileForm(prev => ({ ...prev, breakGlassConsent: e.target.checked }));
+                }}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-600">
+                {profileForm.breakGlassConsent ? 'Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-gray-500">
+              Enable emergency access for critical situations (test with checkbox)
+            </p>
+          </div>
+
+          <Toggle
+            label="Emergency Priority Access (Toggle)"
+            checked={profileForm.breakGlassConsent}
+            onChange={(newValue) => {
+              console.log('Toggle changed from', profileForm.breakGlassConsent, 'to', newValue);
+              setProfileForm(prev => ({ ...prev, breakGlassConsent: newValue }));
+            }}
+            helperText="Enable emergency access for critical situations"
+          />
+          
+          {/* Debug info */}
+          <div className="mt-2 p-2 bg-gray-100 rounded text-xs">
+            Debug: breakGlassConsent = {profileForm.breakGlassConsent.toString()}
+          </div>
 
           <div className="flex gap-3">
             <Button type="submit" disabled={loading}>

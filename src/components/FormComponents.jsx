@@ -258,10 +258,56 @@ const RadioGroup = ({
   );
 };
 
+const Toggle = ({ 
+  label, 
+  checked, 
+  onChange, 
+  disabled = false,
+  helperText,
+  error
+}) => {
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label}
+      </label>
+      <div className="flex items-center">
+        <button
+          type="button"
+          onClick={() => onChange(!checked)}
+          disabled={disabled}
+          className={`
+            relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+            ${checked ? 'bg-blue-600' : 'bg-gray-200'}
+            ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          `}
+        >
+          <span
+            className={`
+              inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+              ${checked ? 'translate-x-6' : 'translate-x-1'}
+            `}
+          />
+        </button>
+        <span className="ml-3 text-sm text-gray-600">
+          {checked ? 'Enabled' : 'Disabled'}
+        </span>
+      </div>
+      {error && (
+        <p className="mt-1 text-sm text-red-600">{error}</p>
+      )}
+      {helperText && !error && (
+        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+      )}
+    </div>
+  );
+};
+
 export { 
   FormField, 
   SelectField, 
   TextArea, 
   Checkbox, 
-  RadioGroup 
+  RadioGroup,
+  Toggle 
 };
