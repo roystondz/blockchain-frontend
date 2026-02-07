@@ -17,6 +17,7 @@ import Card from "../components/Card";
 import Button from "../components/Button";
 import Table from "../components/Table";
 import Modal from "../components/Modal";
+import EmergencyModal from "../components/EmergencyModal";
 import InputField from "../components/InputField";
 import DataTable from "../components/DataTable";
 import { ProfessionalCard } from "../components/ProfessionalCard";
@@ -40,6 +41,9 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
 
   const [emergencyPatientId, setEmergencyPatientId] = useState(null);
   const [selectedEmergencyPatient, setSelectedEmergencyPatient] = useState(null);
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
+  const [emergencyModalPatient, setEmergencyModalPatient] = useState(null);
+  const [emergencyRequestLoading, setEmergencyRequestLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +53,11 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
     hospitalId: "",
     hospitalName: "",
   });
+
+
+
+
+
 
   // NEW: Loading states for buttons
   const [requestLoading, setRequestLoading] = useState(false);
@@ -248,6 +257,35 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
       toast.error("Failed to send request");
     } finally {
       setRequestLoading(false);
+    }
+  };
+
+  // -----------------------------------
+  // EMERGENCY ACCESS REQUEST
+  // -----------------------------------
+  const handleEmergencyRequest = async (reason) => {
+    setEmergencyRequestLoading(true);
+    try {
+      await api.post("/doctor/emergency/request", {
+        doctorId,
+        patientId: emergencyModalPatient.patientId,
+        hospitalId: doctorInfo.hospitalId,
+        reason: reason || "Emergency medical care required"
+      });
+
+      toast.success("Emergency access request sent! Waiting for admin approval.");
+      setShowEmergencyModal(false);
+      setEmergencyModalPatient(null);
+      
+      // Refresh emergency access to check if approved
+      setTimeout(() => {
+        fetchMyEmergencyAccess();
+      }, 2000);
+    } catch (error) {
+      console.error("Emergency request error:", error);
+      toast.error("Failed to send emergency request");
+    } finally {
+      setEmergencyRequestLoading(false);
     }
   };
 
@@ -516,6 +554,16 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
               //   filterable: true
               // },
               {
+                header: "Blood Type",
+                accessor: "bloodGroup",
+                sortable: true
+              },
+              {
+                header: "Age",
+                accessor: "age",
+                sortable: true
+              },
+              {
                 header: "Actions",
                 accessor: "actions",
                 render: (_, row) => (
@@ -536,8 +584,8 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
                       size="sm" 
                       variant="danger"
                       onClick={() => {
-                        setEmergencyPatient(row);
-                        setActiveTab("emergency-patient");
+                        setEmergencyModalPatient(row);
+                        setShowEmergencyModal(true);
                       }}
                     >
                       <Shield className="w-4 h-4 mr-1" />
@@ -618,7 +666,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
                   
                   <div className="bg-gray-50 rounded-lg p-4">
                     <p className="text-sm text-gray-500 mb-1">Blood Type</p>
-                    <p className="font-semibold text-red-600">{selectedEmergencyPatient.bloodType}</p>
+                    <p className="font-semibold text-red-600">{selectedEmergencyPatient.bloodGroup}</p>
                   </div>
                 </div>
               </ProfessionalCard>
@@ -631,69 +679,26 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
               >
                 {records.length > 0 ? (
                   <Table
-                    headers={["Record ID", "Date", "Type", "Diagnosis", "Prescription", "Prescribed By", "Report"]}
+                    headers={["Record ID", "Date", "Diagnosis", "Prescription", "Report Hash"]}
                     data={records}
                     renderRow={(record) => (
                       <tr key={record.recordId} className="hover:bg-gray-50">
                         <td className="px-6 py-4 font-mono text-sm">{record.recordId}</td>
                         <td className="px-6 py-4">
-                          <div className="text-sm">
-                            {new Date(record.timestamp).toLocaleDateString()}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(record.timestamp).toLocaleTimeString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            record.reportHash 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {record.reportHash ? 'Digital Report' : 'Text Entry'}
-                          </span>
+                          {new Date(record.timestamp).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                             {record.diagnosis}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="max-w-xs truncate text-sm" title={record.prescription}>
-                            {record.prescription}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-blue-600 font-bold text-xs">
-                                {record.doctorName?.charAt(0) || 'D'}
-                              </span>
-                            </div>
-                            <div>
-                              <div className="text-sm font-medium text-gray-900">
-                                {record.doctorName || 'Unknown Doctor'}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {record.doctorId || 'N/A'}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
+                        <td className="px-6 py-4">{record.prescription}</td>
                         <td className="px-6 py-4">
                           {record.reportHash && (
-                            <a
-                              href={`https://gateway.pinata.cloud/ipfs/${record.reportHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-sm font-medium transition-colors duration-200"
-                            >
-                              <FileText className="w-4 h-4" />
-                              <span>View Report</span>
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </a>
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-gray-600">Verified</span>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -760,7 +765,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
                     },
                     {
                       header: "Blood Type",
-                      accessor: "bloodType",
+                      accessor: "bloodGroup",
                       sortable: true
                     },
                     {
@@ -824,68 +829,24 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
             }
           >
             <Table
-              headers={["ID", "Date", "Type", "Diagnosis", "Prescription", "Prescribed By", "Report"]}
+              headers={["ID", "Date", "Diagnosis", "Prescription", "Report"]}
               data={records}
               renderRow={(r) => (
                 <tr key={r.recordId}>
-                  <td className="px-6 py-3 font-mono text-sm">{r.recordId}</td>
+                  <td className="px-6 py-3">{r.recordId}</td>
                   <td className="px-6 py-3">
-                    <div className="text-sm">
-                      {new Date(r.timestamp).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(r.timestamp).toLocaleTimeString()}
-                    </div>
+                    {new Date(r.timestamp).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-3">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      r.reportHash 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {r.reportHash ? 'Digital Report' : 'Text Entry'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <span className="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                      {r.diagnosis}
-                    </span>
-                  </td>
-                  <td className="px-6 py-3">
-                    <div className="max-w-xs truncate text-sm" title={r.prescription}>
-                      {r.prescription}
-                    </div>
-                  </td>
-                  <td className="px-6 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-bold text-xs">
-                          {r.doctorName?.charAt(0) || 'D'}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {r.doctorName || 'Unknown Doctor'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {r.doctorId || 'N/A'}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
+                  <td className="px-6 py-3">{r.diagnosis}</td>
+                  <td className="px-6 py-3">{r.prescription}</td>
                   <td className="px-6 py-3">
                     {r.reportHash && (
                       <a
                         href={`https://gateway.pinata.cloud/ipfs/${r.reportHash}`}
+                        className="text-blue-600 underline"
                         target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-sm font-medium transition-colors duration-200"
                       >
-                        <FileText className="w-4 h-4" />
-                        <span>View Report</span>
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
+                        <Eye className="inline w-4 h-4 mr-1" /> View
                       </a>
                     )}
                   </td>
@@ -972,6 +933,18 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
           </Button>
         </form>
       </Modal>
+
+      {/* ==================== EMERGENCY MODAL ==================== */}
+      <EmergencyModal
+        isOpen={showEmergencyModal}
+        onClose={() => {
+          setShowEmergencyModal(false);
+          setEmergencyModalPatient(null);
+        }}
+        patient={emergencyModalPatient}
+        onConfirm={handleEmergencyRequest}
+        loading={emergencyRequestLoading}
+      />
     </DashboardLayout>
   );
 };
