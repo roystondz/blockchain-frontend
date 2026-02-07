@@ -40,7 +40,7 @@ useEffect(() => {
   const [emergencyRequests, setEmergencyRequests] = useState([]);
   const [emergencyLoading, setEmergencyLoading] = useState(false);
   const [processingRequest, setProcessingRequest] = useState(null);
-  const adminId = localStorage.getItem("userId") || "";
+  //const adminId = localStorage.getItem("userId") || "";
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 

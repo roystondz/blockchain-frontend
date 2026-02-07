@@ -9,6 +9,22 @@ import InputField from "../components/InputField";
 import Button from "../components/Button";
 import { SelectField, Toggle } from "../components/FormComponents";
 
+function calculateAge(dateOfBirth) {
+    const dob = new Date(dateOfBirth);
+    const today = new Date();
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    const monthDiff = today.getMonth() - dob.getMonth();
+    const dayDiff = today.getDate() - dob.getDate();
+
+    // If birthday hasn't occurred yet this year, subtract 1
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+    }
+
+    return age;
+}
 
 const HospitalDashboard = () => {
   const [activeTab, setActiveTab] = useState('doctor');
@@ -29,7 +45,10 @@ const HospitalDashboard = () => {
     city: '',
     mobile:'',
     gender:'',
-    breakGlassConsent:''
+    breakGlassConsent:false,
+    age:'',
+    bloodGroup:'',
+    
   });
   const [loading, setLoading] = useState(false);
   
@@ -57,10 +76,32 @@ const HospitalDashboard = () => {
     setLoading(true);
     
     try {
-      const res = await api.post('/registerPatient', patientForm);
+      // Calculate age before sending and ensure breakGlassConsent is boolean
+      const age = calculateAge(patientForm.dob);
+      const updatedPatientForm = { 
+        ...patientForm, 
+        age,
+        breakGlassConsent: Boolean(patientForm.breakGlassConsent)
+      };
+      
+      console.log('Form data before submission:', updatedPatientForm);
+      console.log('BreakGlass consent value:', updatedPatientForm.breakGlassConsent, 'Type:', typeof updatedPatientForm.breakGlassConsent);
+      
+      const res = await api.post('/registerPatient', updatedPatientForm);
       if (res.data.success) {
         toast.success('Patient registered successfully!');
-        setPatientForm({ ...patientForm, patientId: '', name: '', dob: '', city: '', mobile:'', gender:'', breakGlassConsent:'' });
+        setPatientForm({ 
+          ...patientForm, 
+          patientId: '', 
+          name: '', 
+          dob: '', 
+          city: '', 
+          mobile: '', 
+          gender: '', 
+          breakGlassConsent: false,
+          age: '',
+          bloodGroup: ''
+        });
       } else {
         toast.error(res.data.message || 'Registration failed');
       }
@@ -168,19 +209,51 @@ const HospitalDashboard = () => {
                 required
               />
               <InputField
+                label="Date of Birth"
+                type="date"
+                value={patientForm.dob}
+                onChange={(e) => {
+                  const newDob = e.target.value;
+                  const calculatedAge = calculateAge(newDob);
+                  setPatientForm({ 
+                    ...patientForm, 
+                    dob: newDob, 
+                    age: calculatedAge 
+                  });
+                }}
+                required
+              />
+              <InputField
+                label="Age"
+                value={patientForm.age}
+                placeholder="25"
+                required
+                disabled
+              />
+              <SelectField
+                label="Blood Group"
+                value={patientForm.bloodGroup}
+                onChange={(e) => setPatientForm({ ...patientForm, bloodGroup: e.target.value })}
+                options={[
+                  { value: 'A+', label: 'A+' },
+                  { value: 'A-', label: 'A-' },
+                  { value: 'B+', label: 'B+' },
+                  { value: 'B-', label: 'B-' },
+                  { value: 'AB+', label: 'AB+' },
+                  { value: 'AB-', label: 'AB-' },
+                  { value: 'O+', label: 'O+' },
+                  { value: 'O-', label: 'O-' }
+                ]}
+                required
+              />
+              <InputField
                 label="Hospital Name"
                 value={patientForm.hospitalName}
                 onChange={(e) => setPatientForm({ ...patientForm, hospitalName: e.target.value })}
                 placeholder="City General Hospital"
                 required
               />
-              <InputField
-                label="Date of Birth"
-                type="date"
-                value={patientForm.dob}
-                onChange={(e) => setPatientForm({ ...patientForm, dob: e.target.value })}
-                required
-              />
+              
               <InputField
                 label="Mobile"
                 type="number"
