@@ -37,9 +37,12 @@ useEffect(() => {
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [emergencyRequests, setEmergencyRequests] = useState([]);
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [approvedRequests, setApprovedRequests] = useState([]);
+  const [rejectedRequests, setRejectedRequests] = useState([]);
   const [emergencyLoading, setEmergencyLoading] = useState(false);
   const [processingRequest, setProcessingRequest] = useState(null);
+  const [emergencySubTab, setEmergencySubTab] = useState("pending");
   //const adminId = localStorage.getItem("userId") || "";
 
   const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -63,20 +66,46 @@ useEffect(() => {
     }
   };
 
-  // Admin -> Fetch pending emergency requests
-const fetchEmergencyRequests = async () => {
-  setEmergencyLoading(true);
+  // Admin -> Fetch emergency requests by status
+const fetchEmergencyRequests = async (status = 'pending') => {
   try {
-    const res = await api.post("/admin/emergency/requests", { adminId: "HOSP-01" });
+    const res = await api.get('/emergency/requests', {
+      params: { 
+        status: status.toUpperCase(), 
+        userId: "HOSP-01" 
+      }
+    });
     if (res.data.success) {
       let data = res.data.data;
       if (typeof data === "string") data = JSON.parse(data);
       if (!Array.isArray(data)) data = [];
-      setEmergencyRequests(data);
+      
+      // Update the specific status array
+      if (status === 'pending') {
+        setPendingRequests(data);
+      } else if (status === 'approved') {
+        setApprovedRequests(data);
+      } else if (status === 'rejected') {
+        setRejectedRequests(data);
+      }
     }
   } catch (error) {
+    console.error(`Failed to fetch ${status} emergency requests:`, error);
+    toast.error(`Failed to load ${status} emergency requests`);
+  }
+};
+
+// Fetch all emergency requests
+const fetchAllEmergencyRequests = async () => {
+  setEmergencyLoading(true);
+  try {
+    await Promise.all([
+      fetchEmergencyRequests('pending'),
+      fetchEmergencyRequests('approved'),
+      fetchEmergencyRequests('rejected')
+    ]);
+  } catch (error) {
     console.error("Failed to fetch emergency requests:", error);
-    toast.error("Failed to load emergency requests");
   } finally {
     setEmergencyLoading(false);
   }
@@ -94,7 +123,8 @@ const decideEmergencyRequest = async (requestId, action) => {
     
     if (res.data.success) {
       toast.success(`Request ${action.toLowerCase()}ed successfully!`);
-      fetchEmergencyRequests(); // refresh list
+      // Refresh all emergency requests after decision
+      fetchAllEmergencyRequests();
     } else {
       toast.error(res.data.message || `Failed to ${action.toLowerCase()} request`);
     }
@@ -172,7 +202,7 @@ const decideEmergencyRequest = async (requestId, action) => {
           <button
             onClick={() => {
               setActiveTab("emergency");
-              fetchEmergencyRequests();
+              fetchAllEmergencyRequests();
             }}
             className={`px-6 py-3 font-medium ${
               activeTab === "emergency"
@@ -443,26 +473,107 @@ const decideEmergencyRequest = async (requestId, action) => {
       {/* ⭐ TAB 3: EMERGENCY REQUESTS */}
       {activeTab === "emergency" && (
         <Card title="Emergency Access Requests" icon={Shield}>
+          {/* Emergency Sub-Tabs */}
+          <div className="mb-6 flex gap-2 border-b">
+            <button
+              onClick={() => setEmergencySubTab("pending")}
+              className={`px-4 py-2 font-medium ${
+                emergencySubTab === "pending"
+                  ? "border-b-2 border-yellow-500 text-yellow-600"
+                  : "text-gray-600"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Pending</span>
+                <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {pendingRequests.length}
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setEmergencySubTab("approved")}
+              className={`px-4 py-2 font-medium ${
+                emergencySubTab === "approved"
+                  ? "border-b-2 border-green-500 text-green-600"
+                  : "text-gray-600"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Approved</span>
+                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {approvedRequests.length}
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => setEmergencySubTab("rejected")}
+              className={`px-4 py-2 font-medium ${
+                emergencySubTab === "rejected"
+                  ? "border-b-2 border-red-500 text-red-600"
+                  : "text-gray-600"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Rejected</span>
+                <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {rejectedRequests.length}
+                </span>
+              </div>
+            </button>
+          </div>
+
           {emergencyLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin h-8 w-8 border-2 border-blue-600 border-t-transparent rounded-full"></div>
               <span className="ml-3 text-gray-600">Loading emergency requests...</span>
             </div>
-          ) : emergencyRequests.length === 0 ? (
+          ) : emergencySubTab === "pending" && pendingRequests.length === 0 ? (
             <div className="text-center py-8">
               <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No emergency access requests at this time.</p>
+              <p className="text-gray-600">No pending emergency requests at this time.</p>
               <p className="text-sm text-gray-500 mt-2">Doctors will appear here when they request emergency access to patient records.</p>
+            </div>
+          ) : emergencySubTab === "approved" && approvedRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-gray-600">No approved emergency requests yet.</p>
+              <p className="text-sm text-gray-500 mt-2">Approved emergency requests will appear here.</p>
+            </div>
+          ) : emergencySubTab === "rejected" && rejectedRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="text-gray-600">No rejected emergency requests yet.</p>
+              <p className="text-sm text-gray-500 mt-2">Rejected emergency requests will appear here.</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {emergencyRequests.map((request, index) => (
+              {(emergencySubTab === "pending" ? pendingRequests :
+                emergencySubTab === "approved" ? approvedRequests :
+                rejectedRequests).map((request, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-semibold text-sm">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          request.status?.toLowerCase() === 'approved' ? 'bg-green-100' :
+                          request.status?.toLowerCase() === 'rejected' ? 'bg-red-100' :
+                          'bg-blue-100'
+                        }`}>
+                          <span className={`font-semibold text-sm ${
+                            request.status?.toLowerCase() === 'approved' ? 'text-green-600' :
+                            request.status?.toLowerCase() === 'rejected' ? 'text-red-600' :
+                            'text-blue-600'
+                          }`}>
                             {request.doctorName?.charAt(0) || 'D'}
                           </span>
                         </div>
@@ -512,7 +623,7 @@ const decideEmergencyRequest = async (requestId, action) => {
                         {request.status || 'pending'}
                       </span>
                       
-                      {request.status === 'PENDING' && (
+                      {request.status?.toLowerCase() === 'pending' && (
                         <div className="flex gap-2">
                           <button
                             onClick={() => decideEmergencyRequest(request.requestId || index, 'APPROVE')}
