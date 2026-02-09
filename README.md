@@ -1,8 +1,15 @@
 # 🏥 EHR System - Blockchain-Powered Healthcare Management
 
-A modern, enterprise-grade Electronic Health Record (EHR) system built with React and secured by Hyperledger Fabric blockchain technology.
+A modern, enterprise-grade Electronic Health Record (EHR) system built with React and secured by Hyperledger Fabric blockchain technology. Features comprehensive emergency access management, role-based dashboards, and real-time medical record sharing.
 
 ## ✨ Key Features
+
+### 🚨 **Emergency Access Management**
+- **Emergency Request System** - Doctors can request immediate patient access in critical situations
+- **Emergency Modal Interface** - Urgent, visually striking request forms with detailed patient information
+- **Admin Approval Workflow** - Three-tier review system (Pending/Approved/Rejected)
+- **Real-time Status Tracking** - Live updates on emergency request decisions
+- **Audit Trail** - Complete logging of all emergency access requests
 
 ### 🚀 **Advanced User Experience**
 - **Smart Search** - Intelligent autocomplete with keyboard navigation
@@ -49,6 +56,8 @@ MongoDB           - Database management
 ### 🛡️ **Administrator Dashboard**
 - **System Overview** - Real-time metrics and health monitoring
 - **Hospital Management** - Register and manage healthcare facilities
+- **Emergency Request Management** - Review and approve/reject emergency access requests
+- **Three-Tier Emergency Review** - Pending/Approved/Rejected request tracking
 - **User Administration** - Manage doctors and patient access
 - **Blockchain Explorer** - View distributed ledger data
 - **Analytics & Reports** - Comprehensive system insights
@@ -62,6 +71,8 @@ MongoDB           - Database management
 
 ### 👨‍⚕️ **Doctor Dashboard**
 - **Patient Records** - Access and update medical histories
+- **Emergency Access Requests** - Request immediate access to critical patient data
+- **Emergency Modal System** - Visually striking emergency request interface
 - **Prescription Management** - Digital prescription system
 - **Lab Results** - View and analyze diagnostic data
 - **Patient Communication** - Secure messaging system
@@ -80,6 +91,9 @@ MongoDB           - Database management
 - Node.js 16+ 
 - npm or yarn
 - Git
+- Hyperledger Fabric (for blockchain features)
+- MongoDB (for data storage)
+- IPFS (for distributed file storage)
 
 ### **Installation**
 ```bash
@@ -102,6 +116,22 @@ cp .env.example .env
 # Configure your API endpoints
 REACT_APP_API_URL=http://localhost:5000
 REACT_APP_BLOCKCHAIN_URL=http://localhost:7051
+REACT_APP_IPFS_URL=http://localhost:5001
+REACT_APP_MONGODB_URI=mongodb://localhost:27017/ehr-system
+```
+
+### **Backend Setup**
+```bash
+# Start backend server (required for API endpoints)
+cd ../backend
+npm install
+npm run dev
+
+# Start blockchain network
+./startBlockchain.sh
+
+# Start IPFS node
+ipfs daemon
 ```
 
 ## 📱 Sample Login Credentials
@@ -132,6 +162,11 @@ Password: [Your Password]
 
 ## 🎨 UI Components
 
+### **Emergency Components**
+- **EmergencyModal** - Urgent, visually striking emergency access request interface
+- **EmergencyRequestCard** - Display emergency request details with status indicators
+- **EmergencyStatusBadge** - Color-coded status indicators (Pending/Approved/Rejected)
+
 ### **Professional Cards**
 - **StatsCard** - Animated metric displays
 - **BlockchainCard** - Security status indicators
@@ -158,6 +193,7 @@ Password: [Your Password]
 ```
 src/
 ├── components/          # Reusable UI components
+│   ├── EmergencyModal.jsx
 │   ├── ProfessionalCard.jsx
 │   ├── EnhancedUX.jsx
 │   ├── FormComponents.jsx
@@ -172,6 +208,31 @@ src/
 ├── context/             # React context providers
 └── assets/              # Static assets
 ```
+
+### **API Integration**
+```javascript
+// Emergency Access APIs
+GET /emergency/requests?status=PENDING&userId=HOSP-01
+GET /emergency/requests?status=APPROVED&userId=HOSP-01
+GET /emergency/requests?status=REJECTED&userId=HOSP-01
+POST /admin/emergency/requests (legacy pending requests)
+
+// Doctor APIs
+GET /doctor/emergency/my-access
+POST /doctor/emergency/request
+POST /doctor/checkAccess
+POST /doctor/requestAccess
+
+// Admin APIs
+POST /admin/emergency/decision
+POST /getSystemStats
+```
+
+### **State Management**
+- **React Hooks** - useState, useEffect, useCallback
+- **Context API** - Global state management
+- **Local State** - Component-level state management
+- **API State** - Async data fetching patterns
 
 ### **Available Scripts**
 ```bash
@@ -215,6 +276,14 @@ npm run lint       # Run ESLint
 
 ## 🌟 Recent Updates
 
+### **Version 2.1 Features**
+- 🚨 **Emergency Access System** - Complete emergency request workflow
+- 📋 **Emergency Modal Interface** - Visually striking emergency request forms
+- 🔄 **Three-Tier Review System** - Pending/Approved/Rejected request management
+- ⚡ **Real-time Status Updates** - Live emergency request tracking
+- 🎯 **Enhanced Admin Dashboard** - Improved emergency request management
+- 📊 **Dual API Integration** - Support for legacy and new emergency endpoints
+
 ### **Version 2.0 Features**
 - ✨ **Enhanced UX Components** - Modern, intuitive interface
 - 🎨 **Professional Design System** - Consistent visual language
@@ -232,6 +301,7 @@ npm run lint       # Run ESLint
 - **Loading States** - Improved user feedback
 - **Accessibility** - WCAG compliance improvements
 - **Testing Coverage** - Comprehensive test suite
+- **API Optimization** - Efficient data fetching patterns
 
 ## 🤝 Contributing
 
