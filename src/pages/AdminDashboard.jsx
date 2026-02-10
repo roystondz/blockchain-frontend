@@ -40,6 +40,7 @@ useEffect(() => {
   const [pendingRequests, setPendingRequests] = useState([]);
   const [approvedRequests, setApprovedRequests] = useState([]);
   const [rejectedRequests, setRejectedRequests] = useState([]);
+  const [revokedRequests, setRevokedRequests] = useState([]);
   const [emergencyLoading, setEmergencyLoading] = useState(false);
   const [processingRequest, setProcessingRequest] = useState(null);
   const [emergencySubTab, setEmergencySubTab] = useState("pending");
@@ -69,12 +70,20 @@ useEffect(() => {
   // Admin -> Fetch emergency requests by status
 const fetchEmergencyRequests = async (status = 'pending') => {
   try {
-    const res = await api.get('/emergency/requests', {
-      params: { 
-        status: status.toUpperCase(), 
-        userId: "HOSP-01" 
-      }
-    });
+    let res;
+    
+    // Use old API for pending requests, new API for approved/rejected/revoked
+    if (status === 'pending') {
+      res = await api.post("/admin/emergency/requests", { adminId: "HOSP-01" });
+    } else {
+      res = await api.get('/emergency/requests', {
+        params: { 
+          status: status.toUpperCase(), 
+          userId: "HOSP-01" 
+        }
+      });
+    }
+    
     if (res.data.success) {
       let data = res.data.data;
       if (typeof data === "string") data = JSON.parse(data);
@@ -87,6 +96,8 @@ const fetchEmergencyRequests = async (status = 'pending') => {
         setApprovedRequests(data);
       } else if (status === 'rejected') {
         setRejectedRequests(data);
+      } else if (status === 'revoked') {
+        setRevokedRequests(data);
       }
     }
   } catch (error) {
@@ -102,7 +113,8 @@ const fetchAllEmergencyRequests = async () => {
     await Promise.all([
       fetchEmergencyRequests('pending'),
       fetchEmergencyRequests('approved'),
-      fetchEmergencyRequests('rejected')
+      fetchEmergencyRequests('rejected'),
+      fetchEmergencyRequests('revoked')
     ]);
   } catch (error) {
     console.error("Failed to fetch emergency requests:", error);
@@ -131,6 +143,31 @@ const decideEmergencyRequest = async (requestId, action) => {
   } catch (error) {
     console.error(`Failed to ${action.toLowerCase()} emergency request:`, error);
     toast.error(`Failed to ${action.toLowerCase()} request`);
+  } finally {
+    setProcessingRequest(null);
+  }
+};
+
+// Admin -> Revoke approved request
+const revokeEmergencyRequest = async (requestId) => {
+  setProcessingRequest(requestId);
+  console.log(requestId);
+  try {
+    const res = await api.post("/emergency/revoke", {
+      requestId: requestId,
+      userId: "HOSP-01"
+    });
+    console.log(res.data);
+    if (res.data.success) {
+      toast.success("Emergency access revoked successfully!");
+      // Refresh all emergency requests after revocation
+      fetchAllEmergencyRequests();
+    } else {
+      toast.error(res.data.message || "Failed to revoke emergency access");
+    }
+  } catch (error) {
+    console.error("Failed to revoke emergency request:", error);
+    toast.error("Failed to revoke emergency access");
   } finally {
     setProcessingRequest(null);
   }
@@ -522,6 +559,22 @@ const decideEmergencyRequest = async (requestId, action) => {
                 </span>
               </div>
             </button>
+
+            <button
+              onClick={() => setEmergencySubTab("revoked")}
+              className={`px-4 py-2 font-medium ${
+                emergencySubTab === "revoked"
+                  ? "border-b-2 border-gray-500 text-gray-600"
+                  : "text-gray-600"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Revoked</span>
+                <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                  {revokedRequests.length}
+                </span>
+              </div>
+            </button>
           </div>
 
           {emergencyLoading ? (
@@ -555,11 +608,22 @@ const decideEmergencyRequest = async (requestId, action) => {
               <p className="text-gray-600">No rejected emergency requests yet.</p>
               <p className="text-sm text-gray-500 mt-2">Rejected emergency requests will appear here.</p>
             </div>
+          ) : emergencySubTab === "revoked" && revokedRequests.length === 0 ? (
+            <div className="text-center py-8">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <p className="text-gray-600">No revoked emergency requests yet.</p>
+              <p className="text-sm text-gray-500 mt-2">Revoked emergency requests will appear here.</p>
+            </div>
           ) : (
             <div className="space-y-4">
               {(emergencySubTab === "pending" ? pendingRequests :
                 emergencySubTab === "approved" ? approvedRequests :
-                rejectedRequests).map((request, index) => (
+                emergencySubTab === "rejected" ? rejectedRequests :
+                revokedRequests).map((request, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -567,11 +631,13 @@ const decideEmergencyRequest = async (requestId, action) => {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           request.status?.toLowerCase() === 'approved' ? 'bg-green-100' :
                           request.status?.toLowerCase() === 'rejected' ? 'bg-red-100' :
+                          request.status?.toLowerCase() === 'revoked' ? 'bg-gray-100' :
                           'bg-blue-100'
                         }`}>
                           <span className={`font-semibold text-sm ${
                             request.status?.toLowerCase() === 'approved' ? 'text-green-600' :
                             request.status?.toLowerCase() === 'rejected' ? 'text-red-600' :
+                            request.status?.toLowerCase() === 'revoked' ? 'text-gray-600' :
                             'text-blue-600'
                           }`}>
                             {request.doctorName?.charAt(0) || 'D'}
@@ -618,6 +684,7 @@ const decideEmergencyRequest = async (requestId, action) => {
                         request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         request.status === 'approved' ? 'bg-green-100 text-green-800' :
                         request.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        request.status === 'revoked' ? 'bg-gray-100 text-gray-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {request.status || 'pending'}
@@ -664,6 +731,28 @@ const decideEmergencyRequest = async (requestId, action) => {
                             )}
                           </button>
                         </div>
+                      )}
+
+                      {request.status?.toLowerCase() === 'approved' && (
+                        <button
+                          onClick={() => revokeEmergencyRequest(request.requestId || index)}
+                          disabled={processingRequest === (request.requestId || index)}
+                          className="px-3 py-1 bg-gray-600 text-white text-xs rounded-full hover:bg-gray-700 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {processingRequest === (request.requestId || index) ? (
+                            <>
+                              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Processing...
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                              Revoke
+                            </>
+                          )}
+                        </button>
                       )}
                     </div>
                   </div>
