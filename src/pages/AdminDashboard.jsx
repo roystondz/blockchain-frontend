@@ -67,7 +67,53 @@ useEffect(() => {
     }
   };
 
-  // Admin -> Fetch emergency requests by status
+  // Fetch doctor details and enrich with name only
+const enrichWithPatientName = async (requests) => {
+  const enrichedRequests = await Promise.all(
+    requests.map(async (request) => {
+      const enrichedRequest = { ...request };
+      
+      // Fetch doctor details if doctorName is missing but doctorId exists
+      if (!enrichedRequest.doctorName && enrichedRequest.doctorId) {
+        try {
+          const res = await api.post(`http://localhost:3000/getDoctorInfo`, {
+            doctorId: enrichedRequest.doctorId,
+            userId: enrichedRequest.doctorId
+          });
+          if (res.data.success && res.data.data) {
+            enrichedRequest.doctorName = res.data.data.name;
+            // Also populate hospital name from doctor's data
+            if (res.data.data.hospitalName && !enrichedRequest.hospitalName) {
+              enrichedRequest.hospitalName = res.data.data.hospitalName;
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch doctor name:", error);
+        }
+      }
+      
+      // Only add patient name if it doesn't exist but patientId does
+      if (!enrichedRequest.patientName && enrichedRequest.patientId) {
+        try {
+          const res = await api.post(`http://localhost:3000/getPatientProfile`, {
+            userId: enrichedRequest.patientId
+          });
+          if (res.data.success && res.data.data) {
+            enrichedRequest.patientName = res.data.data.name;
+          }
+        } catch (error) {
+          console.error("Failed to fetch patient name:", error);
+        }
+      }
+      
+      return enrichedRequest;
+    })
+  );
+  
+  return enrichedRequests;
+};
+
+// Admin -> Fetch emergency requests by status
 const fetchEmergencyRequests = async (status = 'pending') => {
   try {
     let res;
@@ -89,15 +135,18 @@ const fetchEmergencyRequests = async (status = 'pending') => {
       if (typeof data === "string") data = JSON.parse(data);
       if (!Array.isArray(data)) data = [];
       
+      // Enrich with patient names only (preserves existing data)
+      const enrichedData = await enrichWithPatientName(data);
+      
       // Update the specific status array
       if (status === 'pending') {
-        setPendingRequests(data);
+        setPendingRequests(enrichedData);
       } else if (status === 'approved') {
-        setApprovedRequests(data);
+        setApprovedRequests(enrichedData);
       } else if (status === 'rejected') {
-        setRejectedRequests(data);
+        setRejectedRequests(enrichedData);
       } else if (status === 'revoked') {
-        setRevokedRequests(data);
+        setRevokedRequests(enrichedData);
       }
     }
   } catch (error) {
