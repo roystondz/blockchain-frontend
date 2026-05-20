@@ -294,7 +294,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
   // -----------------------------------
   const handleAddRecord = async (e) => {
     e.preventDefault();
-    if (!recordForm.file) return toast.error("Please upload a file");
+    //if (!recordForm.file) return toast.error("Please upload a file");
 
     setAddRecordLoading(true);
 
@@ -303,7 +303,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
     formData.append("patientId", selectedPatient.patientId);
     formData.append("diagnosis", recordForm.diagnosis);
     formData.append("prescription", recordForm.prescription);
-    formData.append("report", recordForm.file);
+    formData.append("report", recordForm.file || "");
 
     try {
       await api.post("/addRecord", formData, {
@@ -679,7 +679,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
               >
                 {records.length > 0 ? (
                   <Table
-                    headers={["Record ID", "Date", "Diagnosis", "Prescription", "Report Hash"]}
+                    headers={["Record ID", "Date", "Diagnosis", "Prescription", "Report","Report Hash"]}
                     data={records}
                     renderRow={(record) => (
                       <tr key={record.recordId} className="hover:bg-gray-50">
@@ -693,6 +693,37 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
                           </span>
                         </td>
                         <td className="px-6 py-4">{record.prescription}</td>
+                        <td className="px-6 py-4">{record.reportHash && <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    const url = `https://gateway.pinata.cloud/ipfs/${record.reportHash}`;
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = blobUrl;
+
+                    const ext = blob.type.includes("pdf")
+                      ? "pdf"
+                      : blob.type.includes("png")
+                      ? "png"
+                      : blob.type.includes("jpeg")
+                      ? "jpg"
+                      : "file";
+
+                    link.download = `MedicalReport.${ext}`;
+                    link.click();
+
+                    window.URL.revokeObjectURL(blobUrl);
+                  } catch {
+                    toast.error("Failed to download the report");
+                  }
+                }}
+              >
+                Download
+              </Button>}</td>
                         <td className="px-6 py-4">
                           {record.reportHash && (
                             <div className="flex items-center gap-2">
@@ -714,7 +745,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
               </Card>
 
               {/* Emergency Actions */}
-              <ProfessionalCard 
+              {/* <ProfessionalCard 
                 title="Emergency Actions" 
                 icon={Shield}
                 badge={{ text: "Critical Care", type: 'danger' }}
@@ -733,7 +764,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
                     Emergency Contact
                   </Button>
                 </div>
-              </ProfessionalCard>
+              </ProfessionalCard> */}
             </>
           ) : (
             /* Emergency Patient List */
@@ -918,7 +949,7 @@ const [emergencyPatient, setEmergencyPatient] = useState(null);
             onChange={(e) =>
               setRecordForm({ ...recordForm, file: e.target.files[0] })
             }
-            required
+            
           />
 
           <Button type="submit" disabled={addRecordLoading}>

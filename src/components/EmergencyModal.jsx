@@ -21,7 +21,7 @@ const EmergencyModal = ({ isOpen, onClose, patient, onConfirm, loading = false }
           <span className="text-red-600 font-bold">🚨 EMERGENCY ACCESS REQUEST 🚨</span>
         </div>
       }
-      size="lg"
+      size="xl"
       className="border-red-200"
     >
       <div className="space-y-6">
